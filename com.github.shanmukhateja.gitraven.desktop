@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=GitRaven
+Exec=gitraven-qt
+Icon=git
+Type=Application
+Terminal=false
+Categories=Utility;Development
+

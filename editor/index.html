@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitRaven</title>
+    <!-- Monaco -->
+    <link rel="stylesheet" href="node_modules/monaco-editor/min/vs/editor/editor.main.css">
+</head>
+
+<style>
+    * {
+        padding: 0;
+        margin: 0;
+    }
+
+    html,
+    body {
+        min-height: 100% !important;
+        height: 100%;
+        overflow: hidden;
+    }
+
+    #editorContainer {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        position: relative;
+    }
+</style>
+
+<body>
+    <div id="editorContainer"></div>
+</body>
+
+<!-- CPP <-> JS communication -->
+<script src="qrc:///qtwebchannel/qwebchannel.js"></script>
+<!-- Init Monaco -->
+<script src="node_modules/monaco-editor/min/vs/loader.js"></script>
+<script>
+    require.config({ paths: { vs: './node_modules/monaco-editor/min/vs' } });
+</script>
+<script src="node_modules/monaco-editor/min/vs/editor/editor.main.js"></script>
+
+<script>
+    var diffEditor = null;
+    var cppBridge = null;
+    
+    const container = document.getElementById('editorContainer');
+    function init(options) {
+        console.log('init called', JSON.stringify(options));
+
+        // Init communication
+        // Note: try-catch here allows us to debug in a web browser directly.
+        try {
+            new QWebChannel(qt.webChannelTransport, function (channel) {
+                cppBridge = channel.objects.cppBridge;
+            });
+        } catch (error) {
+            console.warn("QWebChannel initialization failed", error);
+        }
+        
+        // Init Diff editor
+        require(['vs/editor/editor.main'], function () {
+
+            const defaultOptions = {
+                automaticLayout: true,
+                overviewRulerLanes: 0,
+                renderOverviewRuler: false,
+                scrollbar: {
+                    vertical: "hidden",
+                    horizontal: "hidden"
+                },
+                minimap: { enabled: false },
+                scrollBeyondLastLine: true,
+                // word wrap on RHS
+                diffWordWrap: 'on',
+                // word wrap on LHS
+                // https://github.com/microsoft/monaco-editor/discussions/4454#discussioncomment-11111244
+                useInlineViewWhenSpaceIsLimited: false
+            };
+            diffEditor = monaco.editor.createDiffEditor(container, { ...defaultOptions, ...options });
+
+            // Remove unwanted options from context-menu
+
+            const excludeList = [
+                'editor.action.changeAll',
+                'editor.action.quickCommand'
+            ];
+
+            // 1. context menu
+            require(['vs/platform/actions/common/actions'], function (r) {
+                const registry = r.MenuRegistry;
+                const origMenuActions = r.MenuRegistry.getMenuItems;
+                r.MenuRegistry.getMenuItems = function (r) {
+                    if (r.id == 'EditorContext') {
+                        const result = origMenuActions.call(this, r);
+                        excludeList.forEach(id => {
+                            const idx = result.findIndex(e => e.command?.id == id);
+                            result.splice(idx, 1);
+                        });
+                        return result;
+                    }
+                    return origMenuActions.call(this, r);
+                }
+            });
+
+            // 2. Keyboard shortcut
+            diffEditor.addCommand(monaco.KeyCode.ContextMenu, () => { });
+
+            window.addEventListener('resize', updateHeight);
+
+            // When Ctrl+S is pressed, send the modified contents to CPP side.
+            diffEditor.addAction({
+                id: "save-changes",
+                label: "Save Changes",
+                contextMenuOrder: 2,
+                contextMenuGroupId: "1_modification",
+                keybindings: [
+                    monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS,
+                ],
+                precondition: '!editorReadonly',
+                run: () => {
+                    // Send modified text back to CPP for saving changes to disk.
+                        const modifiedText = diffEditor.getModel().modified.getValue();
+                        // Send modified changes to CPP.
+                        if (!cppBridge) {
+                            console.warn('cppBridge not available, ignoring request');
+                            return;
+                        }
+                        cppBridge.saveModifiedChanges(modifiedText);
+                }
+            });
+        });
+    }
+
+    function updateHeight() {
+        const model = diffEditor.getModel();
+        if (!model) return;
+
+        container.style.height = window.outerHeight + 'px';
+        diffEditor.layout();
+    };
+
+    function update(payload) {
+        console.log('update called');
+        if (!diffEditor) {
+            console.error('Init not called/finished yet.');
+            return;
+        }
+        diffEditor.setModel({
+            original: monaco.editor.createModel(payload.oldText),
+            modified: monaco.editor.createModel(payload.newText)
+        });
+
+        // Scroll to the first diff on load.
+        diffEditor.revealFirstDiff();
+    }
+
+    function setReadonly(readOnly) {
+        console.log('setReadonly called with value=', readOnly);
+        if (!diffEditor) {
+            console.error('Init not called/finished yet.');
+            return;
+        }
+        diffEditor.updateOptions({ readOnly });
+    }
+
+    function setTheme(options) {
+        console.log('setTheme called with options=', JSON.stringify(options));
+        if (!diffEditor) {
+            console.error('Init not called/finished yet.');
+            return;
+        }
+        diffEditor.updateOptions({ theme: options.theme == 'light' ? 'vs-light' : 'vs-dark' });
+    }
+</script>
+
+</html>
