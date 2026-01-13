@@ -9,8 +9,9 @@
 #include <QLabel>
 
 
-MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent)
+MainWindow::MainWindow(GitManager *manager, QWidget *parent)
+    : QMainWindow(parent),
+    m_git_manager{manager}
 {
     // Window stuff
     setGeometry(0,0, 1366, 768);
@@ -39,6 +40,11 @@ MainWindow::MainWindow(QWidget *parent)
 
     m_statusBar = new RavenStatusBar(centralWidget);
     layout->addWidget(m_statusBar);
+}
+
+MainWindow::~MainWindow()
+{
+    delete m_git_manager;
 }
 
 // https://forum.qt.io/post/424408

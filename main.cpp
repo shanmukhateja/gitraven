@@ -6,47 +6,19 @@
 #include <QFileDialog>
 #include <QMessageBox>
 
-void init(QString gitRepoPath, MainWindow &w) {
-    // Git init
-    GitManager *manager = new GitManager(gitRepoPath);
-    int result = manager->init();
-    if (result != 0) {
-        QString msgStr = QString("Failed to load Git repository at '%1', error: %2").arg(gitRepoPath).arg(QString::number(result));
-        QMessageBox msg(QMessageBox::Critical, "GitRaven", msgStr, QMessageBox::Ok, w.topLevelWidget());
-        msg.exec();
-        std::exit(0);
-        return;
-    }
-
-    // Show window
-    w.setGitManager(manager);
-    w.show();
-
-    // Attach listener for git status change events here
-    auto ravenTree = w.getRavenLHSView()->getRavenTree();
-    QObject::connect(manager, &GitManager::statusChanged, ravenTree, &RavenTree::buildTree);
-    // Change status bar's branch name whenever Git status is called
-    // Note: Is this the right place for this code?
-    QObject::connect(manager, &GitManager::statusChanged, &w, [&w](GitManager::status_data sd) {
-        emit w.statusBar()->signalHEADChange(sd.headStatus);
-    });
-}
-
 int main(int argc, char *argv[])
 {
-    QApplication a(argc, argv);
-    a.setOrganizationDomain("com.github.shanmukhateja");
-    a.setApplicationName("gitraven-qt");
-    a.setWindowIcon(QIcon::fromTheme("git"));
-
-    MainWindow w;
+    QApplication app(argc, argv);
+    app.setOrganizationDomain("com.github.shanmukhateja");
+    app.setApplicationName("gitraven-qt");
+    app.setWindowIcon(QIcon::fromTheme("git"));
 
     std::optional<QString> gitRepoPath;
     if (argc > 1) {
         gitRepoPath = argv[1];
     } else {
         // Show dialog to select repo directory
-        gitRepoPath = QFileDialog::getExistingDirectory(&w,
+        gitRepoPath = QFileDialog::getExistingDirectory(nullptr,
                                                         "Open Directory",
                                                         nullptr,
                                                         QFileDialog::ShowDirsOnly
@@ -54,11 +26,27 @@ int main(int argc, char *argv[])
                                                         );
     }
 
-    if (gitRepoPath.has_value()) {
-        init(gitRepoPath.value(), w);
-        return a.exec();
-    }
+    // Clean exit
+    if (!gitRepoPath.has_value()) return 0;
 
-    return 0;
+    // Git init
+    GitManager *manager = new GitManager(gitRepoPath.value());
+
+    // MainWindow
+    MainWindow w(manager);
+    w.show();
+
+    // Attach listener for git status change events here
+    // Note: This code maybe moved elsewhere now that 
+    // GM lifecycle issue is fixed.
+    auto ravenTree = w.getRavenLHSView()->getRavenTree();
+    QObject::connect(manager, &GitManager::statusChanged, ravenTree, &RavenTree::buildTree);
+    // Change status bar's branch name whenever Git status is called
+    // Note: Is this the right place for this code?
+    QObject::connect(manager, &GitManager::statusChanged, &w, [&w](GitManager::status_data sd) {
+        emit w.statusBar()->signalHEADChange(sd.headStatus);
+    });
+
+    return app.exec();
 }
 

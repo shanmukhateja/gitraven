@@ -1,16 +1,25 @@
 #include "gitmanager.h"
 #include <QFile>
+#include <QMessageBox>
 #include <qdebug.h>
 
 namespace fs = std::filesystem;
 
 GitManager::GitManager(QString dir, QObject *parent)
-{    
+    : QObject{parent},
+    m_repoPath{dir}
+{
+    Q_ASSERT(!m_repoPath.isEmpty());
+
     // Init Git library
     git_libgit2_init();
-
-    // Init manager
-    m_repoPath = dir;
+    int result = init();
+    if (result != 0) {
+        QString msgStr = QString("Failed to load Git repository at '%1', error: %2").arg(m_repoPath).arg(QString::number(result));
+        QMessageBox msg(QMessageBox::Critical, "GitRaven", msgStr, QMessageBox::Ok, (QWidget*)parent);
+        msg.exec();
+        std::exit(0);
+    }
 }
 
 GitManager::~GitManager()

@@ -62,7 +62,6 @@ public:
     explicit GitManager(QString dir, QObject *parent = nullptr);
     ~GitManager();
 
-    int init();
     status_data status(bool updateUI = true);
     GitDiffItem diff(RavenTreeItem *item);
     GitStageResponseCode stageItem(RavenTreeItem *item);
@@ -102,6 +101,9 @@ private:
         QString reqFilePath;
         QString repoPath;
     } diff_data;
+
+    // This MUST be called in constructor only.
+    int init();
 
     static int each_file_cb(const git_diff_delta *delta,
                      float progress,
