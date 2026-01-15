@@ -62,6 +62,7 @@ public:
     explicit GitManager(QString dir, QObject *parent = nullptr);
     ~GitManager();
 
+    QString getRepoPath() {return m_repoPath;}
     status_data status(bool updateUI = true);
     GitDiffItem diff(RavenTreeItem *item);
     GitStageResponseCode stageItem(RavenTreeItem *item);

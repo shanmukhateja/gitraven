@@ -45,17 +45,20 @@ void RavenRHSView::initLandingInfo()
 {
     auto widget = m_landingInfoWidget;
 
-    auto layout = new QGridLayout(widget);
+    auto layout = new QVBoxLayout(widget);
     layout->setAlignment(Qt::AlignCenter);
-    widget->setLayout(layout);
-    widget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
-    auto *label = new QLabel(widget);
-    label->setText("GitRaven");
     auto icon = QIcon::fromTheme("git");
     auto iconLabel = new QLabel(widget);
     iconLabel->setPixmap(icon.pixmap(64, 64));
+    iconLabel->setAlignment(Qt::AlignHCenter);
+
+    auto *label = new QLabel("GitRaven", widget);
+    label->setAlignment(Qt::AlignHCenter);
+    label->setStyleSheet("QLabel {font-size: 20px;}");
 
     layout->addWidget(iconLabel);
     layout->addWidget(label);
+
+    widget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 }

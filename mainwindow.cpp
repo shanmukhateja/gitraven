@@ -15,7 +15,7 @@ MainWindow::MainWindow(GitManager *manager, QWidget *parent)
 {
     // Window stuff
     setGeometry(0,0, 1366, 768);
-    setWindowTitle("GitRaven");
+    setWindowTitle(QString("GitRaven - '%1'").arg(manager->getRepoPath()));
 
     // App layout stuff
 

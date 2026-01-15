@@ -3,6 +3,7 @@
 
 #include "gitmanager.h"
 #include "mainwindow.h"
+#include "raveneditor.h"
 
 #include <QVBoxLayout>
 #include <QWidget>
