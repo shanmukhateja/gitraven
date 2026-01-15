@@ -35,10 +35,45 @@ int GitManager::init()
     auto path = m_repoPath.toStdString();
 
     // Open repository
-    int result = git_repository_open(&m_repo, path.c_str());
-    if (result != 0) return result;
+    return git_repository_open(&m_repo, path.c_str());
+}
 
-    return 0;
+QList<GitManager::GitBranchSelectorItem> GitManager::getAllBranchesAndTags()
+{
+    qDebug() << "GitManager::getAllBranchesAndTags called";
+    QList<GitManager::GitBranchSelectorItem> results;
+
+    // Fetch all branches
+    git_branch_iterator *iter = nullptr;
+    git_branch_t branchType{ GIT_BRANCH_ALL };
+    git_branch_iterator_new(&iter, m_repo, branchType);
+    git_reference *out;
+    while (git_branch_next(&out, &branchType, iter) == 0)
+    {
+        // Get name
+        const char *bName = "";
+        git_branch_name(&bName, out);
+        QString branchName = QString::fromStdString(bName);
+        if (!branchName.isEmpty())
+        {
+            auto item = GitManager::GitBranchSelectorItem {GIT_HEAD_TYPE_BRANCH, branchName, branchName.startsWith("origin")};
+            results.append(item);
+        }
+    }
+
+    // Fetch all tags
+    git_strarray arr;
+    git_tag_list(&arr, m_repo);
+    for (int i=0;i<arr.count;i++)
+    {
+        // FIXME: Investigate `isRemote` value here.
+        auto item = GitManager::GitBranchSelectorItem {GIT_HEAD_TYPE_TAG, arr.strings[i], false};
+        results.append(item);
+    }
+
+    git_strarray_free(&arr);
+
+    return results;
 }
 
 GitManager::status_data GitManager::status(bool updateUI)
@@ -78,7 +113,7 @@ GitManager::GitHEADStatus GitManager::findHEADStatus()
 
     if (git_reference_is_branch(ref) == 1)
     {
-        // EASY WAY
+        // [BRANCH] EASY WAY
         const char *branchName = "";
         git_branch_name(&branchName, ref);
         result.name = branchName;
@@ -86,13 +121,26 @@ GitManager::GitHEADStatus GitManager::findHEADStatus()
     }
     else if (git_reference_peel(&obj, ref, GIT_OBJECT_COMMIT) == 0)
     {
-        // [FALLBACK] Set commit hash as branchName
+        // [COMMIT] Set commit hash as branchName
         result.name = oid_to_str(*git_object_id(obj)).toUtf8();
         result.type = GIT_HEAD_TYPE_COMMIT;
         git_object_free(obj);
     }
+    else if (git_reference_peel(&obj, ref, GIT_OBJECT_TAG) == 0)
+    {
+        // [TAG] Locate commit by tag name
+        // FIXME:   Show tag name instead of commit hash.
+        git_tag *tag;
+        int error = git_tag_lookup(&tag, m_repo, git_object_id(obj));
+        if (error == 0)
+        {
+            const char *tagName = git_tag_name(tag);
+            result.name = QString::fromStdString(tagName);
+            result.type = GIT_HEAD_TYPE_TAG;
+        }
 
-    // FIXME: Add tag support
+        git_tag_free(tag);
+    }
 
     // cleanup
     git_reference_free(ref);
@@ -633,6 +681,85 @@ int GitManager::each_file_cb(const git_diff_delta *delta, float progress, void *
 
     d->status = status;
     return 0;
+}
+
+/**
+ * @brief GitManager::checkoutToRef
+ * Checkout in `libgit2` doesn't switch branch, it simply checks files out on disk.
+ * Hence, we must call `git_repository_set_head` on success.
+ * More info: https://stackoverflow.com/a/46758861
+ * @param item The payload contains data used to checkout to ref (branch/tag)
+ * @return `nullptr` on success or QString with error message.
+ */
+QString GitManager::checkoutToRef(GitBranchSelectorItem item)
+{
+    qDebug() << "GitManager::slotCheckoutToRef called";
+
+    std::string refName = item.name.toStdString();
+    int error = -999;
+    git_object *treeish = NULL;
+    git_checkout_options opts = GIT_CHECKOUT_OPTIONS_INIT;
+    opts.checkout_strategy = GIT_CHECKOUT_SAFE;
+    error = git_revparse_single(&treeish, m_repo, refName.c_str());
+    // qDebug() << "revparse error=" << error;
+    if (error != 0) return getCheckoutErrorMessage();
+    error = git_checkout_tree(m_repo, treeish, &opts);
+    // qDebug() << "checkout_tree error=" << error;
+    if (error != 0) return getCheckoutErrorMessage();
+    error = git_repository_set_head(m_repo, this->generateRef(&item).c_str());
+
+    // FIXME: checkout to remote branches or tags lead to detached HEAD state.
+
+    if (error == 0)
+    {
+        // All ok
+        git_object_free(treeish);
+        // Update UI
+        // Note: Is this right place to call this function?
+        status();
+        return nullptr;
+    }
+    else
+    {
+        // Failed to checkout, report error.
+        return getCheckoutErrorMessage();
+    }
+}
+
+std::string GitManager::generateRef(GitManager::GitBranchSelectorItem *item)
+{
+    qDebug() << "GitManager::generateRef called with item.name=" << item->name;
+
+    QString result;
+
+    if (item->isRemote)
+    {
+        result.append("refs/remotes/");
+    }
+    else if (item->type == GIT_HEAD_TYPE_BRANCH)
+    {
+        result.append("refs/heads/");
+    }
+    else if (item->type == GIT_HEAD_TYPE_TAG)
+    {
+        result.append("refs/tags/");
+    }
+    else if (item->type == GIT_HEAD_TYPE_COMMIT)
+    {
+        qCritical() << "GitManager::generateRef expects branch/tag, got commit instead.";
+    }
+
+    result.append(item->name);
+
+    qDebug() << "GitManager::generateRef final value=" << result;
+
+    return result.toStdString();
+}
+
+QString GitManager::getCheckoutErrorMessage()
+{
+    auto errorObj = git_error_last();
+    return QString::fromStdString(errorObj->message);
 }
 
 int GitManager::each_binary_file_cb(const git_diff_delta *delta, const git_diff_binary *binary, void *payload)

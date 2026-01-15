@@ -72,6 +72,8 @@ set(PROJECT_SOURCES
         ravenutils.h
         ravenstatusbar.h
         ravenstatusbar.cpp
+        ravengitcheckoutdialog.h
+        ravengitcheckoutdialog.cpp
 )
 
 qt_add_executable(gitraven-qt

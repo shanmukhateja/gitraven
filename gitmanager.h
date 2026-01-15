@@ -13,8 +13,15 @@ class GitManager: public QObject
 public:
     enum GitHEADStatusType {
         GIT_HEAD_TYPE_COMMIT = 1,
-        GIT_HEAD_TYPE_BRANCH = 2
+        GIT_HEAD_TYPE_BRANCH = 2,
+        GIT_HEAD_TYPE_TAG = 3
     };
+    struct GitBranchSelectorItem {
+        GitHEADStatusType type;
+        QString name;
+        bool isRemote;
+    };
+
     struct GitHEADStatus {
         QString name;
         GitHEADStatusType type;
@@ -68,6 +75,8 @@ public:
     GitStageResponseCode stageItem(RavenTreeItem *item);
     GitStageResponseCode unstageItem(RavenTreeItem *item);
     int commit(QList<QString> items, QString msg, bool amend);
+    QList<GitManager::GitBranchSelectorItem> getAllBranchesAndTags();
+    QString checkoutToRef(GitBranchSelectorItem item);
 
 signals:
     void statusChanged(GitManager::status_data payload);
@@ -115,6 +124,9 @@ private:
 
     QString oid_to_str(git_oid oid);
     GitManager::GitHEADStatus findHEADStatus();
+
+    QString getCheckoutErrorMessage();
+    std::string generateRef(GitManager::GitBranchSelectorItem *item);
 };
 
 

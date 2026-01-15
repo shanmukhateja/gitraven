@@ -2,15 +2,16 @@
 #define RAVENSTATUSBAR_H
 
 #include "gitmanager.h"
+#include "ravengitcheckoutdialog.h"
 
 #include <QObject>
+#include <QLayout>
 
-#include <QHBoxLayout>
 #include <QPushButton>
 #include <QStatusBar>
 #include <QString>
 
-class RavenStatusBar : public QWidget
+class RavenStatusBar : public QStatusBar
 {
     Q_OBJECT
 public:
@@ -21,11 +22,10 @@ public slots:
     void slotHEADChange(GitManager::GitHEADStatus branchName);
 
 private:
-    void init();
+    void onHEADStatusButtonClicked();
 
-    QHBoxLayout *m_layout;
-    QStatusBar *m_statusBar;
     QPushButton *m_headStatusButton;
+    RavenGitCheckoutDialog *m_gitCheckoutDialog;
 };
 
 #endif // RAVENSTATUSBAR_H

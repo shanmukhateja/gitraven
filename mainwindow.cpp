@@ -39,7 +39,7 @@ MainWindow::MainWindow(GitManager *manager, QWidget *parent)
     splitter->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
     m_statusBar = new RavenStatusBar(centralWidget);
-    layout->addWidget(m_statusBar);
+    setStatusBar(m_statusBar);
 }
 
 MainWindow::~MainWindow()
