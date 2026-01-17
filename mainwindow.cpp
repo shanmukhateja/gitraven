@@ -38,8 +38,15 @@ MainWindow::MainWindow(GitManager *manager, QWidget *parent)
     splitter->setSizes({width() / 6, width() / 2});
     splitter->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
-    m_statusBar = new RavenStatusBar(centralWidget);
-    setStatusBar(m_statusBar);
+    auto *statusBar = new RavenStatusBar(centralWidget);
+    setStatusBar(statusBar);
+
+    // Change status bar's branch name whenever Git status is called
+    // Note: Is this the right place for this code?
+    QObject::connect(manager, &GitManager::statusChanged, this, [&statusBar](GitManager::status_data sd) {
+        qDebug() << "GitManager::status call detected, RavenStatusBar signalHEADChange emitted.";
+        emit statusBar->signalHEADChange(sd.headStatus);
+    });
 }
 
 MainWindow::~MainWindow()

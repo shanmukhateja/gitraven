@@ -4,7 +4,6 @@
 
 #include <QApplication>
 #include <QFileDialog>
-#include <QMessageBox>
 
 int main(int argc, char *argv[])
 {
@@ -41,12 +40,6 @@ int main(int argc, char *argv[])
     // GM lifecycle issue is fixed.
     auto ravenTree = w.getRavenLHSView()->getRavenTree();
     QObject::connect(manager, &GitManager::statusChanged, ravenTree, &RavenTree::buildTree);
-    // Change status bar's branch name whenever Git status is called
-    // Note: Is this the right place for this code?
-    QObject::connect(manager, &GitManager::statusChanged, &w, [&w](GitManager::status_data sd) {
-        qDebug() << "GitManager::status call detected, RavenStatusBar signalHEADChange emitted.";
-        emit w.statusBar()->signalHEADChange(sd.headStatus);
-    });
 
     return app.exec();
 }
