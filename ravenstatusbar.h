@@ -17,13 +17,10 @@ class RavenStatusBar : public QStatusBar
 public:
     explicit RavenStatusBar(QWidget *parent = nullptr);
 signals:
-    void signalHEADChange(GitManager::GitHEADStatus branchName);
     void signalShowMessage(const QString msg);
-public slots:
-    void slotHEADChange(GitManager::GitHEADStatus branchName);
-
 private:
     void onHEADStatusButtonClicked();
+    void onCheckoutRefLabelChange(GitManager::GitHEADStatus branchName);
 
     QPushButton *m_headStatusButton;
     RavenGitCheckoutDialog *m_gitCheckoutDialog;

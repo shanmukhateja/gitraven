@@ -1,5 +1,4 @@
 #include "mainwindow.h"
-#include "ravenlhsview.h"
 #include "ravenrhsview.h"
 #include "ravenstatusbar.h"
 
@@ -42,13 +41,6 @@ MainWindow::MainWindow(GitManager *manager, QWidget *parent)
 
     auto *statusBar = new RavenStatusBar(centralWidget);
     setStatusBar(statusBar);
-
-    // Change status bar's branch name whenever Git status is called
-    // Note: Is this the right place for this code?
-    QObject::connect(manager, &GitManager::statusChanged, this, [&statusBar](GitManager::status_data sd) {
-        qDebug() << "GitManager::status call detected, RavenStatusBar signalHEADChange emitted.";
-        emit statusBar->signalHEADChange(sd.headStatus);
-    });
 
     // Link status message dispatcher service to `RavenStatusBar::signalShowMessage`
     connect(m_statusMessageDispatcher, &RavenStatusMessageDispatcher::showMessage, statusBar, &RavenStatusBar::signalShowMessage);
