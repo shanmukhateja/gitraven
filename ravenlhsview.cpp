@@ -31,6 +31,7 @@ RavenLHSView::RavenLHSView(QWidget *parent)
     // Commit button & "ammend commit" checkbox
     auto commitOrAmendWidget = new QWidget(this);
     auto commitOrAmmendLayout = new QHBoxLayout(commitOrAmendWidget);
+    commitOrAmmendLayout->setContentsMargins(0, 0, 0, 0);
 
     m_amendCommitCheckbox = new QCheckBox(commitOrAmendWidget);
     m_amendCommitCheckbox->setText("Amend commit");

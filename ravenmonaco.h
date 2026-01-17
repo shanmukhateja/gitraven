@@ -17,7 +17,7 @@ class RavenMonaco : public QWebEngineView
 public:
     explicit RavenMonaco(QWidget *parent = nullptr);
 
-    RavenMonacoPage *page() const;
+    RavenMonacoPage *page() const { return m_page; }
 
 protected:
     void resizeEvent(QResizeEvent *event) override

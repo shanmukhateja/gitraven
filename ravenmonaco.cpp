@@ -13,9 +13,6 @@ RavenMonaco::RavenMonaco(QWidget *parent)
     m_page = new RavenMonacoPage(this);
     setPage(m_page);
 
-    // Light/dark theme switcher
-    QStyleHints *hint = QGuiApplication::styleHints();
-
     // Init monaco when the page load is finished.
     connect(page(), &QWebEnginePage::loadFinished, this, [this](bool ok) {
         if (!ok) {
@@ -45,18 +42,13 @@ RavenMonaco::RavenMonaco(QWidget *parent)
     m_channel->registerObject("cppBridge", m_bridge);
 
     // Light/dark theme switcher
+    QStyleHints *hint = QGuiApplication::styleHints();
     connect(hint, &QStyleHints::colorSchemeChanged, this, &RavenMonaco::setTheme);
-}
-
-RavenMonacoPage *RavenMonaco::page() const
-{
-    return m_page;
 }
 
 void RavenMonaco::setDefaultUrl()
 {
-    setUrl(QUrl("http://localhost:9191/index.html"));
-    load(url());
+    load(QUrl("http://localhost:9191/index.html"));
 }
 
 void RavenMonaco::setTheme(Qt::ColorScheme colorScheme)
