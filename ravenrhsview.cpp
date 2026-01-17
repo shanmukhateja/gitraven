@@ -1,6 +1,7 @@
 #include "ravenrhsview.h"
-
 #include "raveneditor.h"
+
+#include <QTimer>
 
 RavenRHSView::RavenRHSView(RavenStatusMessageDispatcher *statusMsgDispatcher, QWidget *parent)
     : QWidget{parent},
@@ -36,7 +37,11 @@ void RavenRHSView::renderDiffItem(GitManager::GitDiffItem item)
     }
 
     // Render the diff
-    m_ravenEditor->openDiffItem(std::move(item));
+    // Note: We add a delay so QWebEngine can initialize.
+    // FIXME: remove delay logic here
+    QTimer::singleShot(300, [this,item]{
+        m_ravenEditor->openDiffItem(std::move(item));
+    });
 }
 
 void RavenRHSView::initLandingInfo()

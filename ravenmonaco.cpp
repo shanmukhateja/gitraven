@@ -1,5 +1,6 @@
 #include "ravenmonaco.h"
 
+#include <QGuiApplication>
 #include <QStyleHints>
 #include <QWebChannel>
 #include <qmessagebox.h>
@@ -13,22 +14,6 @@ RavenMonaco::RavenMonaco(QWidget *parent)
     // Init page
     setPage(m_page);
 
-    // Init monaco when the page load is finished.
-    connect(page(), &QWebEnginePage::loadFinished, this, [this](bool ok) {
-        if (!ok) {
-            qCritical() << "Failed to load Monaco editor, check Monaco HTTP server.";
-            QMessageBox errorMsg(QMessageBox::Critical, "GitRaven" , "Failed to load Diff Viewer components.", QMessageBox::Ok);
-            errorMsg.exec();
-            std::exit(-1);
-        }
-
-        // Call init() function
-        page()->runJavaScript("init()", 0, [this](const QVariant &) {
-            // Update Monaco theme
-            setTheme(QGuiApplication::styleHints()->colorScheme());
-        });
-    });
-
     // Init HTTP server for monaco-editor
     m_server = new RavenMonacoHTTPServer(this);
     m_server->init();
@@ -39,25 +24,11 @@ RavenMonaco::RavenMonaco(QWidget *parent)
     m_page->setWebChannel(m_channel);
     m_channel->registerObject("cppBridge", m_bridge);
 
+    m_page->init();
+
     // Light/dark theme switcher
+    // FIXME: Can we move this to page instead?
     QStyleHints *hint = QGuiApplication::styleHints();
-    connect(hint, &QStyleHints::colorSchemeChanged, this, &RavenMonaco::setTheme);
-
-    // Load index.html
-    setDefaultUrl();
+    connect(hint, &QStyleHints::colorSchemeChanged, page(), &RavenMonacoPage::setTheme);
 }
-
-void RavenMonaco::setDefaultUrl()
-{
-    load(QUrl("http://localhost:9191/index.html"));
-}
-
-void RavenMonaco::setTheme(Qt::ColorScheme colorScheme)
-{
-    QJsonObject obj;
-    obj["theme"] = colorScheme == Qt::ColorScheme::Light ? "light" : "dark";
-    QJsonDocument jd(obj);
-    m_page->runJavaScript(QString("setTheme({opt})").replace("{opt}", jd.toJson()));
-}
-
 

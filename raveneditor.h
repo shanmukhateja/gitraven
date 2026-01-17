@@ -33,7 +33,7 @@ private:
 
     GitManager::GitDiffItem m_diffItem;
 
-    bool m_diffVisible = false;
+    bool m_initFinished = false;
 };
 
 #endif // RAVENEDITOR_H

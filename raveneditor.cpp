@@ -1,6 +1,6 @@
 #include "raveneditor.h"
-
 #include "ravenutils.h"
+#include "ravenmonacopage.h"
 
 RavenEditor::RavenEditor(RavenStatusMessageDispatcher *statusMsgDispatcher, QWidget *parent)
     : QWidget{parent},
@@ -12,15 +12,16 @@ void RavenEditor::init()
     auto layout = new QVBoxLayout(this);
     m_webEngineView = new RavenMonaco(this);
     layout->addWidget(m_webEngineView);
-    m_webEngineView->focusWidget();
-    m_diffVisible = true;
 
     // EVENT LISTENERS
 
-    // Wait for page to finish loading before updating Monaco state.
-    connect(m_webEngineView->page(), &QWebEnginePage::loadFinished, this, &RavenEditor::updateUI);
+    // Update Monaco with diff but wait for page to finish loading monaco
+    // This is needed for first-time init of RavenMonaco.
+    connect(m_webEngineView->page(), &RavenMonacoPage::signalInitFinished, this, &RavenEditor::updateUI);
     // Listen for Ctrl+S and save modified file content to disk.
     connect(this, &RavenEditor::signalSaveModifiedChanges, this, &RavenEditor::slotSaveModifiedChanges);
+
+    m_initFinished = true;
 }
 
 void RavenEditor::updateUI()
@@ -43,11 +44,15 @@ void RavenEditor::openDiffItem(GitManager::GitDiffItem item)
     // Update diff item ref.
     m_diffItem = item;
 
-    // Setup UI for first time
-    if (!m_diffVisible) init();
-
-    // Update Monaco state.
-    updateUI();
+    // Init & render diff
+    // 1. Check if we have initialized.
+    bool initFinished = m_initFinished;
+    if (initFinished)
+    {
+        // 2. Next, we check if page is initialized.
+        initFinished = m_webEngineView->isInitFinished();
+    }
+    initFinished ? updateUI() : init();
 }
 
 void RavenEditor::slotSaveModifiedChanges(QString modifiedText)
