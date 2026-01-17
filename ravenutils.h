@@ -50,19 +50,21 @@ public:
         QFile fileForEncodingCheck(absPath);
         if (fileForEncodingCheck.open(QFile::ReadOnly)) {
 
+            // Clone `text` so it stays unaffected by below code!
+            auto textClone = QString(text);
             // Read first 4 bytes from `text` variable.
             // Note: We need to use the modified text to determine encoding
             //       in case existing file contents are empty.
             // FIXME: UTF-16 support?
-            auto minSize = std::min(4, (int)text.size());
-            QByteArray bytes(text.slice(0, minSize).toUtf8());
-            fileForEncodingCheck.close();
+            auto minSize(std::min(4, (int)textClone.size()));
+            QByteArray bytes(textClone.slice(0, minSize).toUtf8());
             encoding = detectTextEncoding(bytes);
             if (!encoding.has_value()) {
                 qDebug() << "Unable to determine file encoding, skipping modifying file.";
                 return false;
             }
         }
+        fileForEncodingCheck.close();
 
         // Write new text content.
         QFile file(absPath);
@@ -74,6 +76,7 @@ public:
             }
             out << text;
             out.flush();
+            file.close();
             return true;
         }
 
