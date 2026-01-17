@@ -18,6 +18,10 @@ RavenStatusBar::RavenStatusBar(QWidget *parent)
     connect(m_headStatusButton, &QPushButton::clicked, this, &RavenStatusBar::onHEADStatusButtonClicked);
 
     layout()->addWidget(m_headStatusButton);
+
+    connect(this, &RavenStatusBar::signalShowMessage, this, [this](const QString msg) {
+        this->showMessage(msg, SHOW_MESSAGE_TIMEOUT_MILLIS);
+    });
 }
 
 void RavenStatusBar::onHEADStatusButtonClicked()

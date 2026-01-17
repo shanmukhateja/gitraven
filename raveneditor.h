@@ -3,6 +3,7 @@
 
 #include "gitmanager.h"
 #include "ravenmonaco.h"
+#include "ravenstatusmessagedispatcher.h"
 
 #include <QObject>
 #include <QSplitter>
@@ -15,7 +16,7 @@ class RavenEditor : public QWidget
 {
     Q_OBJECT
 public:
-    explicit RavenEditor(QWidget *parent = nullptr);
+    explicit RavenEditor(RavenStatusMessageDispatcher *statusMsgDispatcher, QWidget *parent = nullptr);
 
     void init();
     void updateUI();
@@ -28,6 +29,7 @@ protected slots:
 
 private:
     RavenMonaco *m_webEngineView;
+    RavenStatusMessageDispatcher *m_statusMsgDispatcher;
 
     GitManager::GitDiffItem m_diffItem;
 

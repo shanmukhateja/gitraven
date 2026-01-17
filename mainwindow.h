@@ -2,7 +2,7 @@
 #define MAINWINDOW_H
 
 #include "ravenlhsview.h"
-#include "ravenstatusbar.h"
+#include "ravenstatusmessagedispatcher.h"
 
 #include <QMainWindow>
 #include <QTreeView>
@@ -18,13 +18,12 @@ public:
     bool event(QEvent * e) override;
 
     RavenLHSView* getRavenLHSView() { return m_lhsView; }
-    RavenStatusBar *statusBar() { return m_statusBar; }
 
     GitManager* getGitManager() const { return m_git_manager; }
 
 private:
     RavenLHSView *m_lhsView = nullptr;
     GitManager *m_git_manager = nullptr;
-    RavenStatusBar *m_statusBar = nullptr;
+    RavenStatusMessageDispatcher *m_statusMessageDispatcher = nullptr;
 };
 #endif // MAINWINDOW_H

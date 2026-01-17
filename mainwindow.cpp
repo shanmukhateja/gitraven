@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 #include "ravenlhsview.h"
 #include "ravenrhsview.h"
+#include "ravenstatusbar.h"
 
 #include <QEvent>
 #include <QGridLayout>
@@ -11,7 +12,8 @@
 
 MainWindow::MainWindow(GitManager *manager, QWidget *parent)
     : QMainWindow(parent),
-    m_git_manager{manager}
+    m_git_manager{manager},
+    m_statusMessageDispatcher{new RavenStatusMessageDispatcher(this)}
 {
     // Window stuff
     setGeometry(0,0, 1366, 768);
@@ -27,7 +29,7 @@ MainWindow::MainWindow(GitManager *manager, QWidget *parent)
     QSplitter *splitter = new QSplitter(Qt::Horizontal, centralWidget);
 
     m_lhsView = new RavenLHSView(centralWidget);
-    RavenRHSView *rhsView = new RavenRHSView(centralWidget);
+    RavenRHSView *rhsView = new RavenRHSView(m_statusMessageDispatcher, centralWidget);
 
     splitter->addWidget(m_lhsView);
     splitter->addWidget(rhsView);
@@ -47,6 +49,9 @@ MainWindow::MainWindow(GitManager *manager, QWidget *parent)
         qDebug() << "GitManager::status call detected, RavenStatusBar signalHEADChange emitted.";
         emit statusBar->signalHEADChange(sd.headStatus);
     });
+
+    // Link status message dispatcher service to `RavenStatusBar::signalShowMessage`
+    connect(m_statusMessageDispatcher, &RavenStatusMessageDispatcher::showMessage, statusBar, &RavenStatusBar::signalShowMessage);
 }
 
 MainWindow::~MainWindow()

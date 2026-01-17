@@ -74,6 +74,8 @@ set(PROJECT_SOURCES
         ravenstatusbar.cpp
         ravengitcheckoutdialog.h
         ravengitcheckoutdialog.cpp
+        ravenstatusmessagedispatcher.h
+        ravenstatusmessagedispatcher.cpp
 )
 
 qt_add_executable(gitraven-qt

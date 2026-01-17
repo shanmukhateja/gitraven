@@ -2,10 +2,10 @@
 
 #include "raveneditor.h"
 
-RavenRHSView::RavenRHSView(QWidget *parent)
+RavenRHSView::RavenRHSView(RavenStatusMessageDispatcher *statusMsgDispatcher, QWidget *parent)
     : QWidget{parent},
     m_mainWindow(static_cast<MainWindow*>(topLevelWidget()->window())),
-    m_ravenEditor{new RavenEditor(this)},
+    m_ravenEditor{new RavenEditor(statusMsgDispatcher, this)},
     m_landingInfoWidget(new QWidget(this))
 {
     // Setup UI

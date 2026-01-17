@@ -12,7 +12,7 @@ class RavenRHSView : public QWidget
 {
     Q_OBJECT
 public:
-    explicit RavenRHSView(QWidget *parent);
+    explicit RavenRHSView(RavenStatusMessageDispatcher *statusMsgDispatcher, QWidget *parent);
     ~RavenRHSView() override;
 
     void initLandingInfo();

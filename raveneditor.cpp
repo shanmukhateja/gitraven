@@ -2,8 +2,9 @@
 
 #include "ravenutils.h"
 
-RavenEditor::RavenEditor(QWidget *parent)
-    : QWidget{parent}
+RavenEditor::RavenEditor(RavenStatusMessageDispatcher *statusMsgDispatcher, QWidget *parent)
+    : QWidget{parent},
+    m_statusMsgDispatcher(statusMsgDispatcher)
 {}
 
 void RavenEditor::init()
@@ -55,9 +56,14 @@ void RavenEditor::slotSaveModifiedChanges(QString modifiedText)
 
     auto filePath = m_diffItem.newFilePath;
     qDebug() << "newPath=" << filePath;
-    qDebug() << "text   =" << modifiedText;
+    // qDebug() << "text   =" << modifiedText;
 
-    RavenUtils::saveFile(filePath, modifiedText);
+    bool result = RavenUtils::saveFile(filePath, modifiedText);
 
-    // TODO: show status
+    // Show status
+    m_statusMsgDispatcher->showMessage(result ? "File changes saved successfully" : "Failed to save changes");
+
+    // TODO: Update Diff UI
+    // Note:    This will reload the diff viewer UI so user can see
+    //          what was actually written to disk.
 }
