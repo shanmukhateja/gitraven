@@ -18,7 +18,7 @@ public:
     void initLandingInfo();
 
 public slots:
-    void updateUI(std::optional<GitManager::GitDiffItem> item);
+    void renderDiffItem(GitManager::GitDiffItem item);
 
 private:
     bool m_showLandingInfo = true;

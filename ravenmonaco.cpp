@@ -7,10 +7,10 @@
 namespace fs = std::filesystem;
 
 RavenMonaco::RavenMonaco(QWidget *parent)
-    : QWebEngineView{parent}
+    : QWebEngineView{parent},
+    m_page{new RavenMonacoPage(this)}
 {
     // Init page
-    m_page = new RavenMonacoPage(this);
     setPage(m_page);
 
     // Init monaco when the page load is finished.
@@ -24,7 +24,7 @@ RavenMonaco::RavenMonaco(QWidget *parent)
 
         // Call init() function
         page()->runJavaScript("init()", 0, [this](const QVariant &) {
-            // Update theme
+            // Update Monaco theme
             setTheme(QGuiApplication::styleHints()->colorScheme());
         });
     });
@@ -32,8 +32,6 @@ RavenMonaco::RavenMonaco(QWidget *parent)
     // Init HTTP server for monaco-editor
     m_server = new RavenMonacoHTTPServer(this);
     m_server->init();
-
-    setDefaultUrl();
 
     // Init bridge
     m_bridge = new RavenMonacoBridge(this, (RavenEditor*)parent);
@@ -44,6 +42,9 @@ RavenMonaco::RavenMonaco(QWidget *parent)
     // Light/dark theme switcher
     QStyleHints *hint = QGuiApplication::styleHints();
     connect(hint, &QStyleHints::colorSchemeChanged, this, &RavenMonaco::setTheme);
+
+    // Load index.html
+    setDefaultUrl();
 }
 
 void RavenMonaco::setDefaultUrl()

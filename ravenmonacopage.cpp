@@ -1,11 +1,23 @@
 #include "ravenmonacopage.h"
 
+#include <QColor>
+#include <QGuiApplication>
 #include <QJsonObject>
+#include <QStyleHints>
 
 
 RavenMonacoPage::RavenMonacoPage(QObject *parent)
     : QWebEnginePage(parent)
-{}
+{
+    // Update QWebEnginePage theme
+    // Note: This is required to avoid "white flash" when RavenMonaco is loading this page.
+    QStyleHints *hints = QGuiApplication::styleHints();
+    bool isLightTheme = hints->colorScheme() == Qt::ColorScheme::Light;
+    if (!isLightTheme)
+    {
+        setBackgroundColor(QColor(30,30,30));
+    }
+}
 
 void RavenMonacoPage::setReadonly(bool readonly)
 {

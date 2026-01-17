@@ -28,7 +28,6 @@ protected slots:
 
 private:
     RavenMonaco *m_webEngineView;
-    QVBoxLayout *m_layout;
 
     GitManager::GitDiffItem m_diffItem;
 

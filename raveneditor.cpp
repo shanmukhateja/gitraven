@@ -3,32 +3,36 @@
 #include "ravenutils.h"
 
 RavenEditor::RavenEditor(QWidget *parent)
-    : QWidget{parent},
-    m_webEngineView(new RavenMonaco(this)),
-    m_layout(new QVBoxLayout(this))
-{
-    setLayout(m_layout);
-    init();
-
-    connect(this, &RavenEditor::signalSaveModifiedChanges, this, &RavenEditor::slotSaveModifiedChanges);
-}
+    : QWidget{parent}
+{}
 
 void RavenEditor::init()
 {
-    // Hide the widget from UI
-    m_webEngineView->hide();
+    auto layout = new QVBoxLayout(this);
+    m_webEngineView = new RavenMonaco(this);
+    layout->addWidget(m_webEngineView);
+    m_webEngineView->focusWidget();
+    m_diffVisible = true;
+
+    // EVENT LISTENERS
+
+    // Wait for page to finish loading before updating Monaco state.
+    connect(m_webEngineView->page(), &QWebEnginePage::loadFinished, this, &RavenEditor::updateUI);
+    // Listen for Ctrl+S and save modified file content to disk.
+    connect(this, &RavenEditor::signalSaveModifiedChanges, this, &RavenEditor::slotSaveModifiedChanges);
 }
 
 void RavenEditor::updateUI()
 {
-    if (!m_diffVisible) {
-        m_layout->addWidget(m_webEngineView);
-        m_layout->setContentsMargins(0, 0, 0, 0);
-        m_webEngineView->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-        m_webEngineView->show();
+    auto *page = m_webEngineView->page();
 
-        m_diffVisible = true;
-    }
+    // Update text content
+    page->updateText(m_diffItem);
+
+    // update editor readonly status
+    // Note: We don't allow "staged" items to be modified any further.
+    bool readonly = m_diffItem.category == RavenTreeItem::STAGING;
+    page->setReadonly(readonly);
 }
 
 void RavenEditor::openDiffItem(GitManager::GitDiffItem item)
@@ -38,18 +42,11 @@ void RavenEditor::openDiffItem(GitManager::GitDiffItem item)
     // Update diff item ref.
     m_diffItem = item;
 
-    // Refresh UI
+    // Setup UI for first time
+    if (!m_diffVisible) init();
+
+    // Update Monaco state.
     updateUI();
-
-    auto *page = m_webEngineView->page();
-
-    // update editor readonly status
-    // Note: We don't allow "staged" items to be modified any further.
-    bool readonly = item.category == RavenTreeItem::STAGING;
-    page->setReadonly(readonly);
-
-    // Update text content
-    page->updateText(item);
 }
 
 void RavenEditor::slotSaveModifiedChanges(QString modifiedText)

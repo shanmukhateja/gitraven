@@ -2,48 +2,51 @@
 
 #include "raveneditor.h"
 
-#include <QLabel>
-
 RavenRHSView::RavenRHSView(QWidget *parent)
     : QWidget{parent},
     m_mainWindow(static_cast<MainWindow*>(topLevelWidget()->window())),
-    m_ravenEditor(new RavenEditor(this)),
+    m_ravenEditor{new RavenEditor(this)},
     m_landingInfoWidget(new QWidget(this))
 {
-    // Widget config
-    setLayout(new QVBoxLayout(this));
-    layout()->addWidget(m_landingInfoWidget);
+    // Setup UI
+    auto layout = new QVBoxLayout(this);
+    initLandingInfo();
 
-    updateUI(std::nullopt);
-
+    // Event listeners
     m_ravenTree = m_mainWindow->getRavenLHSView()->getRavenTree();
-    connect(m_ravenTree, &RavenTree::renderDiffItem, this, &RavenRHSView::updateUI);
+    connect(m_ravenTree, &RavenTree::renderDiffItem, this, &RavenRHSView::renderDiffItem);
 }
 
 RavenRHSView::~RavenRHSView()
 {
     // cleanup
-    disconnect(m_ravenTree, &RavenTree::renderDiffItem, this, &RavenRHSView::updateUI);
+    disconnect(m_ravenTree, &RavenTree::renderDiffItem, this, &RavenRHSView::renderDiffItem);
 }
 
-void RavenRHSView::updateUI(std::optional<GitManager::GitDiffItem> item)
+void RavenRHSView::renderDiffItem(GitManager::GitDiffItem item)
 {
-    qDebug() << "RavenRHSView::updateUI called";
+    qDebug() << "RavenRHSView::renderDiffItem called";
 
-    m_showLandingInfo = !item.has_value();
-
-    if (!m_showLandingInfo) {
-        m_landingInfoWidget->hide();
-        layout()->addWidget(m_ravenEditor);
-        m_ravenEditor->openDiffItem(std::move(item.value()));
-    } else {
-        initLandingInfo();
+    // Add WebView to layout if it's first time
+    if (m_showLandingInfo)
+    {
+        layout()->replaceWidget(m_landingInfoWidget, m_ravenEditor);
+        m_landingInfoWidget->deleteLater();
+        m_showLandingInfo = false;
     }
+
+    // Render the diff
+    m_ravenEditor->openDiffItem(std::move(item));
 }
 
 void RavenRHSView::initLandingInfo()
 {
+    // Add landing info widget to `this->layout()`
     auto widget = m_landingInfoWidget;
+    layout()->addWidget(widget);
+
+    // Create a layout for landing info widget
+    // so we can add child widgets (icon, text)
 
     auto layout = new QVBoxLayout(widget);
     layout->setAlignment(Qt::AlignCenter);
