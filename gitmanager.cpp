@@ -695,18 +695,22 @@ QString GitManager::checkoutToRef(GitBranchSelectorItem item)
 {
     qDebug() << "GitManager::slotCheckoutToRef called";
 
-    std::string refName = item.name.toStdString();
+    std::string refName = this->generateRefName(&item);
     int error = -999;
-    git_object *treeish = NULL;
-    git_checkout_options opts = GIT_CHECKOUT_OPTIONS_INIT;
-    opts.checkout_strategy = GIT_CHECKOUT_SAFE;
+    git_object *treeish = nullptr;
     error = git_revparse_single(&treeish, m_repo, refName.c_str());
     // qDebug() << "revparse error=" << error;
     if (error != 0) return getCheckoutErrorMessage();
+    git_checkout_options opts = GIT_CHECKOUT_OPTIONS_INIT;
+    opts.checkout_strategy = GIT_CHECKOUT_SAFE;
     error = git_checkout_tree(m_repo, treeish, &opts);
     // qDebug() << "checkout_tree error=" << error;
-    if (error != 0) return getCheckoutErrorMessage();
-    error = git_repository_set_head(m_repo, this->generateRef(&item).c_str());
+    if (error != 0)
+    {
+        git_object_free(treeish);
+        return getCheckoutErrorMessage();
+    }
+    error = git_repository_set_head(m_repo, refName.c_str());
 
     // FIXME: checkout to remote branches or tags lead to detached HEAD state.
 
@@ -721,12 +725,13 @@ QString GitManager::checkoutToRef(GitBranchSelectorItem item)
     }
     else
     {
+        git_object_free(treeish);
         // Failed to checkout, report error.
         return getCheckoutErrorMessage();
     }
 }
 
-std::string GitManager::generateRef(GitManager::GitBranchSelectorItem *item)
+std::string GitManager::generateRefName(GitManager::GitBranchSelectorItem *item)
 {
     qDebug() << "GitManager::generateRef called with item.name=" << item->name;
 

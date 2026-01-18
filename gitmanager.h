@@ -126,7 +126,7 @@ private:
     GitManager::GitHEADStatus findHEADStatus();
 
     QString getCheckoutErrorMessage();
-    std::string generateRef(GitManager::GitBranchSelectorItem *item);
+    std::string generateRefName(GitManager::GitBranchSelectorItem *item);
 };
 
 

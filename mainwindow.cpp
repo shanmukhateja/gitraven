@@ -27,8 +27,8 @@ MainWindow::MainWindow(GitManager *manager, QWidget *parent)
     // Splitter
     QSplitter *splitter = new QSplitter(Qt::Horizontal, centralWidget);
 
-    m_lhsView = new RavenLHSView(centralWidget);
-    RavenRHSView *rhsView = new RavenRHSView(m_statusMessageDispatcher, centralWidget);
+    m_lhsView = new RavenLHSView(splitter);
+    RavenRHSView *rhsView = new RavenRHSView(m_statusMessageDispatcher, splitter);
 
     splitter->addWidget(m_lhsView);
     splitter->addWidget(rhsView);

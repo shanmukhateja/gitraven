@@ -18,7 +18,7 @@ void RavenTreeDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opt
     {
         auto *treeItem = static_cast<RavenTreeItem*>(index.internalPointer());
         auto rect = option.rect;
-        auto isSelected = (option.state & QStyle::State_Selected) == QStyle::State_Selected;
+        auto isSelected = (option.state & QStyle::State_Selected);
         // Increase yOffset for rect to show custom UI items.
         rect.setY(rect.y() + 18);
 
@@ -29,65 +29,69 @@ void RavenTreeDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opt
         font.setWeight(QFont::Weight::Bold);
 
         // Applicable to non-heading items only
-        if (!treeItem->heading)
+        if (treeItem->heading)
         {
-            if (treeItem->deleted)
-            {
-                // Show "Deleted" status
-                painter->setFont(font);
-                painter->setPen(isSelected ? option.palette.text().color() : Qt::red);
-                painter->drawText(statusPoint, "D");
-            }
-            else if (treeItem->modified())
-            {
-                // Show "Uncommitted" status
-                painter->setFont(font);
-                painter->setPen(isSelected ? option.palette.text().color() : Qt::magenta);
-                painter->drawText(statusPoint, "M");
-            }
-            else
-            {
-                // Show "Uncommitted" status
-                painter->setFont(font);
-                painter->setPen(isSelected ? option.palette.text().color() : Qt::green);
-                painter->drawText(statusPoint, "U");
-            }
-
-            // Show button to + or - from Changes<->Staging Area
-
-            QRect buttonRect = option.rect;
-            buttonRect.setX(option.rect.topRight().x() - 60);
-            //buttonRect.setY(option.rect.y() - 80);
-            buttonRect.setWidth(24);
-            buttonRect.setHeight(24);
-
-            // Create button widget here
-            QStyleOptionButton buttonOption;
-            buttonOption.rect = buttonRect;
-            buttonOption.state = option.state;
-            buttonOption.features = QStyleOptionButton::Flat;
-            buttonOption.palette = option.palette;
-
-            QStyle *style = QApplication::style();
-            
-            // WORKAROUND: Hide the `border-bottom` for `buttonOption` when treeview row is selected
-            QBrush buttonOptionBrush;
-            buttonOptionBrush.setColor(Qt::GlobalColor::transparent);
-            buttonOption.palette.setBrush(QPalette::ColorRole::HighlightedText, buttonOptionBrush);
-
-            if (treeItem->initiator == RavenTreeItem::STAGING)
-            {
-                // Show - icon
-                buttonOption.text="-";
-                style->drawControl(QStyle::CE_PushButton, &buttonOption, painter);
-            }
-            else
-            {
-                // Show + icon
-                buttonOption.text="+";
-                style->drawControl(QStyle::CE_PushButton, &buttonOption, painter);
-            }
+            painter->restore();
+            return;
         }
+
+        if (treeItem->deleted)
+        {
+            // Show "Deleted" status
+            painter->setFont(font);
+            painter->setPen(isSelected ? option.palette.text().color() : Qt::red);
+            painter->drawText(statusPoint, "D");
+        }
+        else if (treeItem->modified())
+        {
+            // Show "Uncommitted" status
+            painter->setFont(font);
+            painter->setPen(isSelected ? option.palette.text().color() : Qt::magenta);
+            painter->drawText(statusPoint, "M");
+        }
+        else
+        {
+            // Show "Uncommitted" status
+            painter->setFont(font);
+            painter->setPen(isSelected ? option.palette.text().color() : Qt::green);
+            painter->drawText(statusPoint, "U");
+        }
+
+        // Show button to + or - from Changes<->Staging Area
+
+        QRect buttonRect = option.rect;
+        buttonRect.setX(option.rect.topRight().x() - 60);
+        //buttonRect.setY(option.rect.y() - 80);
+        buttonRect.setWidth(24);
+        buttonRect.setHeight(24);
+
+        // Create button widget here
+        QStyleOptionButton buttonOption;
+        buttonOption.rect = buttonRect;
+        buttonOption.state = option.state;
+        buttonOption.features = QStyleOptionButton::Flat;
+        buttonOption.palette = option.palette;
+
+        QStyle *style = QApplication::style();
+        
+        // WORKAROUND: Hide the `border-bottom` for `buttonOption` when treeview row is selected
+        QBrush buttonOptionBrush;
+        buttonOptionBrush.setColor(Qt::GlobalColor::transparent);
+        buttonOption.palette.setBrush(QPalette::ColorRole::HighlightedText, buttonOptionBrush);
+
+        if (treeItem->initiator == RavenTreeItem::STAGING)
+        {
+            // Show - icon
+            buttonOption.text="-";
+            style->drawControl(QStyle::CE_PushButton, &buttonOption, painter);
+        }
+        else
+        {
+            // Show + icon
+            buttonOption.text="+";
+            style->drawControl(QStyle::CE_PushButton, &buttonOption, painter);
+        }
+
     }
     painter->restore();
 }

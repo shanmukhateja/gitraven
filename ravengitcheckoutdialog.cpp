@@ -90,6 +90,11 @@ void RavenGitCheckoutDialog::slotOnBranchChangeRequested()
     QList<GitManager::GitBranchSelectorItem> results = m_gitManager->getAllBranchesAndTags();
 
     // LIST WIDGET
+
+    // Clear old items
+    m_list->clear();
+
+    // Add new items
     for (auto item : results)
     {
         QIcon icon;

@@ -13,20 +13,20 @@ RavenLHSView::RavenLHSView(QWidget *parent)
     m_maxStatusFileCountWarningLabel(new QLabel(this))
 {
     // Widget config
-    setLayout(new QVBoxLayout(this));
-    layout()->addWidget(m_treeView);
+    auto layout = new QVBoxLayout(this);
+    layout->addWidget(m_treeView);
     // Increases QTreeView height against commit message UI
-    ((QVBoxLayout*)layout())->setStretch(0, 1);
+    layout->setStretch(0, 1);
 
     // Commit message UI
     QLabel *commitMessageHeading = new QLabel(this);
     commitMessageHeading->setText("Commit Message");
-    layout()->addWidget(commitMessageHeading);
+    layout->addWidget(commitMessageHeading);
 
     // Commit message text box
     m_commitMessageTextBox = new QPlainTextEdit(this);
     m_commitMessageTextBox->setTabChangesFocus(true);
-    layout()->addWidget(m_commitMessageTextBox);
+    layout->addWidget(m_commitMessageTextBox);
 
     // Commit button & "ammend commit" checkbox
     auto commitOrAmendWidget = new QWidget(this);
@@ -42,7 +42,7 @@ RavenLHSView::RavenLHSView(QWidget *parent)
     commitOrAmmendLayout->addWidget(m_amendCommitCheckbox);
     commitOrAmmendLayout->addWidget(m_commitMessageButton);
 
-    layout()->addWidget(commitOrAmendWidget);
+    layout->addWidget(commitOrAmendWidget);
 
     // connect listeners
     connect(m_treeView->model(), &RavenTreeModel::dataChanged, this, &RavenLHSView::updateCommitMessageUI);
