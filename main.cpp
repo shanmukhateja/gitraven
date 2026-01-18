@@ -14,18 +14,22 @@ int main(int argc, char *argv[])
 
     std::optional<QString> gitRepoPath;
     if (argc > 1) {
-        gitRepoPath = argv[1];
-    } else {
+        bool isDir = std::filesystem::is_directory(argv[1]);
+        if (isDir) gitRepoPath = argv[1];
+    }
+
+    if (!gitRepoPath.has_value())
+    {
         // Show dialog to select repo directory
-        gitRepoPath = QFileDialog::getExistingDirectory(nullptr,
+        auto repoPath = QFileDialog::getExistingDirectory(nullptr,
                                                         "Open Directory",
                                                         nullptr,
                                                         QFileDialog::ShowDirsOnly
                                                             | QFileDialog::DontResolveSymlinks
                                                         );
+        if (!repoPath.isEmpty()) gitRepoPath = repoPath;
     }
 
-    // Clean exit
     if (!gitRepoPath.has_value()) return 0;
 
     // Git init
