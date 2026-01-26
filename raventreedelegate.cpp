@@ -17,16 +17,6 @@ void RavenTreeDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opt
     if (index.isValid())
     {
         auto *treeItem = static_cast<RavenTreeItem*>(index.internalPointer());
-        auto rect = option.rect;
-        auto isSelected = (option.state & QStyle::State_Selected);
-        // Increase yOffset for rect to show custom UI items.
-        rect.setY(rect.y() + 18);
-
-        // Status text (shows D/M/U text at end of row)
-        auto statusPoint = rect.topRight();
-        statusPoint.setX(statusPoint.x() - 20);
-        auto font = painter->font();
-        font.setWeight(QFont::Weight::Bold);
 
         // Applicable to non-heading items only
         if (treeItem->heading)
@@ -35,25 +25,37 @@ void RavenTreeDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opt
             return;
         }
 
+        auto isItemSelected = (option.state & QStyle::State_Selected);
+        auto statusRect = option.rect;
+
+        // Increase yOffset for rect to show custom UI items.
+        statusRect.setY(statusRect.y() + 18);
+
+        // Status text (shows D/M/U text at end of row)
+        auto statusPoint = statusRect.topRight();
+        statusPoint.setX(statusPoint.x() - 20);
+        auto font = painter->font();
+        font.setWeight(QFont::Weight::Bold);
+
         if (treeItem->deleted)
         {
             // Show "Deleted" status
             painter->setFont(font);
-            painter->setPen(isSelected ? option.palette.text().color() : Qt::red);
+            painter->setPen(isItemSelected ? option.palette.text().color() : Qt::red);
             painter->drawText(statusPoint, "D");
         }
         else if (treeItem->modified())
         {
             // Show "Uncommitted" status
             painter->setFont(font);
-            painter->setPen(isSelected ? option.palette.text().color() : Qt::magenta);
+            painter->setPen(isItemSelected ? option.palette.text().color() : Qt::magenta);
             painter->drawText(statusPoint, "M");
         }
         else
         {
             // Show "Uncommitted" status
             painter->setFont(font);
-            painter->setPen(isSelected ? option.palette.text().color() : Qt::green);
+            painter->setPen(isItemSelected ? option.palette.text().color() : Qt::green);
             painter->drawText(statusPoint, "U");
         }
 
@@ -61,7 +63,6 @@ void RavenTreeDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opt
 
         QRect buttonRect = option.rect;
         buttonRect.setX(option.rect.topRight().x() - 60);
-        //buttonRect.setY(option.rect.y() - 80);
         buttonRect.setWidth(24);
         buttonRect.setHeight(24);
 
@@ -91,7 +92,6 @@ void RavenTreeDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opt
             buttonOption.text="+";
             style->drawControl(QStyle::CE_PushButton, &buttonOption, painter);
         }
-
     }
     painter->restore();
 }
