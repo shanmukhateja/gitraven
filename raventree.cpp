@@ -6,22 +6,22 @@
 #include "ravenlhsview.h"
 
 #include <QVBoxLayout>
-
 #include <QMessageBox>
+
 #include <filesystem>
-#include <qevent.h>
 
 namespace fs = std::filesystem;
 
-RavenTree::RavenTree(QWidget *parent)
+RavenTree::RavenTree(GitManager *gitManager, QWidget *parent)
     : QTreeView{parent},
+    m_gitManager(gitManager),
     m_model(new RavenTreeModel(this))
 {
     m_lhsView = (RavenLHSView*) parent;
 
+    // Set model
     setModel(m_model);
-
-    // Enable mouse tracking so we can handle stage/unstage signals
+    // Enable mouse tracking so we can stage/unstage items
     setMouseTracking(true);
     // Use custom delegate to render custom UI elements.
     setItemDelegate(new RavenTreeDelegate());
@@ -29,16 +29,11 @@ RavenTree::RavenTree(QWidget *parent)
     // click listener
     connect(this, &QAbstractItemView::activated, this, &RavenTree::onFileOpened);
     connect(this, &QAbstractItemView::clicked, this, &RavenTree::onFileOpened);
-
-    // Stage/unstage items listener
-    // Note:  Qt::UniqueConnection ensures we call the slot only once.
-    connect(this, &RavenTree::unStageItem, this, &RavenTree::onUnstageItemCalled, Qt::UniqueConnection);
-    connect(this, &RavenTree::stageItem, this, &RavenTree::onStageItemCalled, Qt::UniqueConnection);
 }
 
-void RavenTree::buildTree(GitManager::status_data payload)
+void RavenTree::buildTree(QString repoPath, GitManager::status_data payload)
 {
-    QString repoPath = payload.repoPath;
+    qDebug() << "RavenTree::buildTree called";
     QList<GitManager::GitStatusItem> statusItems = payload.statusItems;
 
     RavenTreeItem *rootNode = m_model->getRootNode();
@@ -113,8 +108,16 @@ void RavenTree::buildTree(GitManager::status_data payload)
     // FIXME: Figure out the QModelIndex params here.
     emit model()->dataChanged({},{}, {});
 
-    // expand the tree always
-    expandAll();
+    // expand the tree if there are no staged items.
+    if (stagingRootNode->children.size() == 0)
+    {
+        expandAll();
+    }
+    else
+    {
+        // expand staging node
+        expandRecursively(m_model->index(1, 0));
+    }
 }
 
 void RavenTree::_buildTree(RavenTreeBuildHelper helper)
@@ -191,50 +194,41 @@ void RavenTree::onFileOpened(const QModelIndex &index)
     emit renderDiffItem(diffItem);
 }
 
-void RavenTree::mousePressEvent(QMouseEvent *event)
+void RavenTree::mouseReleaseEvent(QMouseEvent *event)
 {
-    if (event->type() == QEvent::MouseButtonPress || event->type() == QEvent::MouseButtonRelease)
+    QMouseEvent *mouseEvent = static_cast<QMouseEvent*>(event);
+    auto index = indexAt(event->pos());
+    if (index.isValid())
     {
-        QMouseEvent *mouseEvent = static_cast<QMouseEvent*>(event);
-        auto index = indexAt(event->pos());
-        if (index.isValid())
+        auto treeItem = static_cast<RavenTreeItem*>(index.internalPointer());
+
+        auto rowRect = visualRect(index);
+        auto stageOrUnstageButtonRect = rowRect;
+        stageOrUnstageButtonRect.setX(rowRect.topRight().x() - 60);
+
+        if (stageOrUnstageButtonRect.contains(mouseEvent->pos()))
         {
-            auto treeItem = static_cast<RavenTreeItem*>(index.internalPointer());
-
-            auto rowRect = visualRect(index);
-            auto stageOrUnstageButtonRect = rowRect;
-            stageOrUnstageButtonRect.setX(rowRect.topRight().x() - 60);
-
-            if (stageOrUnstageButtonRect.contains(mouseEvent->pos()))
+            auto isStagingItem = treeItem->initiator == RavenTreeItem::STAGING;
+            if (isStagingItem)
             {
-                auto isStagingItem = treeItem->initiator == RavenTreeItem::STAGING;
-                if (isStagingItem)
-                {
-                    emit unStageItem(&index);
-                }
-                else
-                {
-                    emit stageItem(&index);
-                }
-                event->ignore();
-                return;
+                onUnstageItem(treeItem);
             }
+            else
+            {
+                onStageItem(treeItem);
+            }
+            event->ignore();
+            return;
         }
     }
-    QTreeView::mousePressEvent(event);
+    QTreeView::mouseReleaseEvent(event);
 }
 
-void RavenTree::onStageItemCalled(const QModelIndex *index)
+void RavenTree::onStageItem(RavenTreeItem *treeItem)
 {
-    qDebug() << "RavenTree::onStageItemCalled called";
+    qDebug() << "RavenTree::onStageItem called";
 
-    auto topw = topLevelWidget()->window();
-    MainWindow *mainWindow = static_cast<MainWindow*>(topw);
-
-    auto gitManager = mainWindow->getGitManager();
-
-    auto treeItem = static_cast<RavenTreeItem*>(index->internalPointer());
-    int result = gitManager->stageItem(treeItem);
+    int result = m_gitManager->stageItem(treeItem);
     if (result != GitManager::GitStageResponseCode::DONE)
     {
         QStringList strings = {};
@@ -252,20 +246,14 @@ void RavenTree::onStageItemCalled(const QModelIndex *index)
         return;
     }
     // refresh UI
-    gitManager->status();
+    m_gitManager->statusAsync();
 }
 
-void RavenTree::onUnstageItemCalled(const QModelIndex *index)
+void RavenTree::onUnstageItem(RavenTreeItem* treeItem)
 {
-    qDebug() << "RavenTree::onUnstageItemCalled called";
+    qDebug() << "RavenTree::onUnstageItem called";
 
-    auto topw = topLevelWidget()->window();
-    MainWindow *mainWindow = static_cast<MainWindow*>(topw);
-
-    auto gitManager = mainWindow->getGitManager();
-
-    auto treeItem = static_cast<RavenTreeItem*>(index->internalPointer());
-    int result = gitManager->unstageItem(treeItem);
+    int result = m_gitManager->unstageItem(treeItem);
     if (result != GitManager::GitStageResponseCode::DONE)
     {
         QStringList strings = {};
@@ -283,6 +271,6 @@ void RavenTree::onUnstageItemCalled(const QModelIndex *index)
         return;
     }
     // refresh UI
-    gitManager->status();
+    m_gitManager->statusAsync();
 }
 

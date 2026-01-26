@@ -36,8 +36,6 @@ public:
     // Struct to send/receive data between `status()` and `status_cb()`
     typedef struct status_data {
         QList<GitStatusItem> statusItems;
-        QString repoPath;
-        GitManager::GitHEADStatus headStatus;
     } status_data;
 
 
@@ -69,8 +67,11 @@ public:
     explicit GitManager(QString dir, QObject *parent = nullptr);
     ~GitManager();
 
+    // FIXME: This looks unsafe.
+    git_repository *getRepo() {return m_repo;}
     QString getRepoPath() {return m_repoPath;}
-    status_data status(bool updateUI = true);
+    void statusAsync();
+    GitManager::GitHEADStatus findHEADStatus();
     GitDiffItem diff(RavenTreeItem *item);
     GitStageResponseCode stageItem(RavenTreeItem *item);
     GitStageResponseCode unstageItem(RavenTreeItem *item);
@@ -80,6 +81,7 @@ public:
 
 signals:
     void statusChanged(GitManager::status_data payload);
+    void signalHEADStatusChanged(GitManager::GitHEADStatus status);
 
 private:
     git_repository *m_repo = nullptr;
@@ -91,11 +93,6 @@ private:
     };
     std::optional<RavenFile> getFileContent(git_oid oid);
     std::optional<RavenFile> getLocalFileContent(QString absPath);
-
-    // libgit2
-    static int status_cb(const char *path,
-                         unsigned int status_flags,
-                         void *payload);
 
     typedef struct diff_data {
         git_oid old_oid;
@@ -123,7 +120,6 @@ private:
                                    void *payload);
 
     QString oid_to_str(git_oid oid);
-    GitManager::GitHEADStatus findHEADStatus();
 
     QString getCheckoutErrorMessage();
     std::string generateRefName(GitManager::GitBranchSelectorItem *item);

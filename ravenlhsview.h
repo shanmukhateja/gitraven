@@ -24,6 +24,7 @@ public:
     void resetCommitMessageUI();
 signals:
     void signalMaxStatusFileCountReached(bool reached);
+    void signalStagingItemAbsPathsReady(QList<QString> paths);
 
 public slots:
     void updateCommitMessageUI();
@@ -37,7 +38,7 @@ private:
     QPushButton *m_commitMessageButton;
 
     // Used by `commit()` function
-    QList<QString> getAllStagingItemAbsPaths();
+    void getAllStagingItemAbsPathsAsync();
 
     // Max file count reached UI stuff
     QLabel *m_maxStatusFileCountWarningLabel = nullptr;

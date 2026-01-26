@@ -59,7 +59,7 @@ bool MainWindow::event(QEvent *e)
     case QEvent::WindowActivate:
         // refresh git status
         // Note: This function is also called on first init.
-        getGitManager()->status();
+        getGitManager()->statusAsync();
         break;
     default:
         break;

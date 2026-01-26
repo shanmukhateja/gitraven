@@ -13,32 +13,27 @@ class RavenTree : public QTreeView
 {
     Q_OBJECT
 public:
-    explicit RavenTree(QWidget *parent = nullptr);
+    explicit RavenTree(GitManager *gitManager, QWidget *parent = nullptr);
 
-    RavenTreeModel *model() const
-    {
-        return m_model;
-    }
-
+    RavenTreeModel *model() const { return m_model; }
     int MAX_STATUS_FILES_COUNT = 500;
 signals:
     void renderDiffItem(GitManager::GitDiffItem item);
-    void stageItem(const QModelIndex *index);
-    void unStageItem(const QModelIndex *index);
 
 public slots:
-    void buildTree(GitManager::status_data payload);
+    void buildTree(QString repoPath, GitManager::status_data payload);
     void onFileOpened(const QModelIndex &index);
-    void onStageItemCalled(const QModelIndex *index);
-    void onUnstageItemCalled(const QModelIndex *index);
 
 private:
     RavenTreeModel *m_model;
     RavenLHSView *m_lhsView;
+    GitManager *m_gitManager;
 
     bool maxStatusFilesCountReached = false;
 
-    void mousePressEvent(QMouseEvent *event) override;
+    void onStageItem(RavenTreeItem *treeItem);
+    void onUnstageItem(RavenTreeItem *treeItem);
+    void mouseReleaseEvent(QMouseEvent *event) override;
 
     struct RavenTreeBuildHelper {
         QString repoPath;

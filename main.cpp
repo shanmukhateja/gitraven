@@ -43,7 +43,14 @@ int main(int argc, char *argv[])
     // Note: This code maybe moved elsewhere now that
     // GM lifecycle issue is fixed.
     auto ravenTree = w.getRavenLHSView()->getRavenTree();
-    QObject::connect(manager, &GitManager::statusChanged, ravenTree, &RavenTree::buildTree);
+    QObject::connect(
+        manager,
+        &GitManager::statusChanged,
+        &w,
+        [ravenTree, manager](GitManager::status_data sd){
+            ravenTree->buildTree(manager->getRepoPath(), sd);
+        }
+    );
 
     return app.exec();
 }

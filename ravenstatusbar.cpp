@@ -19,11 +19,11 @@ RavenStatusBar::RavenStatusBar(QWidget *parent)
     // Change status bar's checkout ref name when GitManager::status is called
     connect(
         window->getGitManager(),
-        &GitManager::statusChanged,
+        &GitManager::signalHEADStatusChanged,
         this,
-        [this](GitManager::status_data sd)
+        [this](GitManager::GitHEADStatus headStatus)
         {
-            onCheckoutRefLabelChange(sd.headStatus);
+            onCheckoutRefLabelChange(headStatus);
         }
     );
 

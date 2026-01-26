@@ -1,4 +1,5 @@
 #include "gitmanager.h"
+#include "ravengitstatusthread.h"
 #include <QFile>
 #include <QMessageBox>
 #include <qdebug.h>
@@ -76,29 +77,13 @@ QList<GitManager::GitBranchSelectorItem> GitManager::getAllBranchesAndTags()
     return results;
 }
 
-GitManager::status_data GitManager::status(bool updateUI)
+void GitManager::statusAsync()
 {
-    // These options ensure we return the same output as `git status`
-    // Note: This should still be marked as a known issue just in case.
-    // FIXME: Replace `GIT_STATUS_OPT_RECURSE_UNTRACKED_DIRS` with lazy-loaded
-    //        "get" of files inside directory
-    git_status_options opts = {
-        .version = GIT_STATUS_OPTIONS_VERSION,
-        .show = GIT_STATUS_SHOW_INDEX_AND_WORKDIR,
-        .flags = GIT_STATUS_OPT_INCLUDE_UNTRACKED |
-                 GIT_STATUS_OPT_RECURSE_UNTRACKED_DIRS |
-                 GIT_STATUS_OPT_RENAMES_HEAD_TO_INDEX |
-                 GIT_STATUS_OPT_RENAMES_INDEX_TO_WORKDIR |
-                 GIT_STATUS_OPT_SORT_CASE_SENSITIVELY
-    };
-    status_data payload = {
-        .statusItems = {},
-        .repoPath = m_repoPath,
-        .headStatus = findHEADStatus()
-    };
-    git_status_foreach_ext(m_repo, &opts, status_cb, (void*)&payload);
-    if (updateUI) emit statusChanged(payload);
-    return payload;
+    qDebug() << "GitManager::statusAsync() called";
+    RavenGitStatusThread *workerThread = new RavenGitStatusThread(this);
+    connect(workerThread, &RavenGitStatusThread::resultReady, this, &GitManager::statusChanged);
+    connect(workerThread, &RavenGitStatusThread::finished, workerThread, &QObject::deleteLater);
+    workerThread->start();
 }
 
 GitManager::GitHEADStatus GitManager::findHEADStatus()
@@ -151,19 +136,19 @@ GitManager::GitHEADStatus GitManager::findHEADStatus()
 GitManager::GitStageResponseCode GitManager::stageItem(RavenTreeItem *item)
 {
     git_index *index = nullptr;
-    auto pathStdString = item->fullPath.toStdString();
-
     int error = git_repository_index(&index, m_repo);
-
     if (error != 0)
     {
         qWarning() << "Failed to locate index in the repository.";
         return GitStageResponseCode::INDEX_NOT_FOUND;
     }
 
+    auto pathStdString = item->fullPath.toStdString();
     auto pathCharArray = pathStdString.data();
     git_strarray pathspec = {.count=1};
     pathspec.strings = {&pathCharArray};
+
+    qDebug() << "[GitManager] staging item=" << pathStdString;
 
     error = git_index_add_all(index, &pathspec, GIT_INDEX_ADD_CHECK_PATHSPEC, NULL, NULL);
     if (error != 0)
@@ -642,17 +627,6 @@ std::optional<GitManager::RavenFile> GitManager::getLocalFileContent(QString abs
     return std::nullopt;
 }
 
-int GitManager::status_cb(const char *path, unsigned int status_flags, void *payload)
-{
-    auto *d = (status_data*)payload;
-    auto statusItem = GitStatusItem {path, (git_status_t)status_flags };
-    statusItem.category = RavenTreeItem::getTreeCategoryByStatus(statusItem.flag);
-    statusItem.deleted = RavenTreeItem::checkIfFileDeleted(statusItem.flag);
-
-    d->statusItems.push_back(statusItem);
-    return 0;
-}
-
 int GitManager::each_file_cb(const git_diff_delta *delta, float progress, void *payload)
 {
     qDebug() << "GitManager::each_file_cb called";
@@ -720,7 +694,7 @@ QString GitManager::checkoutToRef(GitBranchSelectorItem item)
         git_object_free(treeish);
         // Update UI
         // Note: Is this right place to call this function?
-        status();
+        statusAsync();
         return nullptr;
     }
     else
