@@ -74,7 +74,7 @@ void RavenLHSView::buildMaxStatusFileCountWarningUI() {
     QString msg;
     // FIXME: Use `QIcon` for warning icon.
     msg.append("⚠️ Large number of files detected, showing first ");
-    msg.append(QString::number(m_treeView->MAX_STATUS_FILES_COUNT));
+    msg.append(QString::number(m_treeView->getMaxStatusFilesCount()));
     msg.append(" items.");
     this->m_maxStatusFileCountWarningLabel->setText(msg);
     this->m_maxStatusFileCountWarningLabel->setStyleSheet("background-color:yellow;color:black;padding:5px");

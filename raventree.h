@@ -16,7 +16,7 @@ public:
     explicit RavenTree(GitManager *gitManager, QWidget *parent = nullptr);
 
     RavenTreeModel *model() const { return m_model; }
-    int MAX_STATUS_FILES_COUNT = 500;
+    int getMaxStatusFilesCount() { return MAX_STATUS_FILES_COUNT; }
 signals:
     void renderDiffItem(GitManager::GitDiffItem item);
 
@@ -30,6 +30,7 @@ private:
     GitManager *m_gitManager;
 
     bool maxStatusFilesCountReached = false;
+    int MAX_STATUS_FILES_COUNT = 500;
 
     void onStageItem(RavenTreeItem *treeItem);
     void onUnstageItem(RavenTreeItem *treeItem);

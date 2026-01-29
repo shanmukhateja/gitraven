@@ -52,11 +52,11 @@ void RavenTree::buildTree(QString repoPath, GitManager::status_data payload)
 
     // If status items count is larger than `MAX_STATUS_FILES_COUNT`,
     // inform user that we are rendering `MAX_STATUS_FILES_COUNT` items.
-    if (statusItems.length() > MAX_STATUS_FILES_COUNT)
+    if (statusItems.length() > getMaxStatusFilesCount())
     {
         this->maxStatusFilesCountReached = true;
         // Reset status count to 500
-        statusItems = statusItems.first(MAX_STATUS_FILES_COUNT);
+        statusItems = statusItems.first(getMaxStatusFilesCount());
         // Inform LHSView to show warning banner
         emit m_lhsView->signalMaxStatusFileCountReached(true);
     }
