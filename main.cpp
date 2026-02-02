@@ -1,6 +1,5 @@
 #include "gitmanager.h"
 #include "mainwindow.h"
-#include "raventree.h"
 
 #include <QApplication>
 #include <QFileDialog>
@@ -38,19 +37,6 @@ int main(int argc, char *argv[])
     // MainWindow
     MainWindow w(manager);
     w.show();
-
-    // Attach listener for git status change events here
-    // Note: This code maybe moved elsewhere now that
-    // GM lifecycle issue is fixed.
-    auto ravenTree = w.getRavenLHSView()->getRavenTree();
-    QObject::connect(
-        manager,
-        &GitManager::statusChanged,
-        &w,
-        [ravenTree, manager](GitManager::status_data sd){
-            ravenTree->buildTree(manager->getRepoPath(), sd);
-        }
-    );
 
     return app.exec();
 }

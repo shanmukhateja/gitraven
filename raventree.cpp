@@ -19,6 +19,11 @@ RavenTree::RavenTree(GitManager *gitManager, QWidget *parent)
 {
     m_lhsView = (RavenLHSView*) parent;
 
+    // Update tree when Git status changes
+    connect(m_gitManager, &GitManager::statusChanged, this,[this](GitManager::status_data sd){
+        buildTree(m_gitManager->getRepoPath(), sd);
+    }, Qt::QueuedConnection);
+
     // Set model
     setModel(m_model);
     // Enable mouse tracking so we can stage/unstage items
