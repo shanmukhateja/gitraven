@@ -133,30 +133,34 @@ void RavenTree::_buildTree(RavenTreeBuildHelper helper)
     auto status = helper.status;
     auto path = helper.path;
 
-    for (const QString &s : std::as_const(split))
+    QString objFullPath;
+
+    for (int i = 0; i < split.length(); ++i)
     {
-        auto it = std::find_if(currentNode->children.begin(), currentNode->children.end(), [s](RavenTreeItem* node) {
-            return s == node->name;
+        auto pathPart = split.at(i);
+
+        auto it = std::find_if(currentNode->children.begin(), currentNode->children.end(),
+                               [pathPart] (RavenTreeItem* node) {
+            return pathPart == node->name;
         });
 
         if (it == currentNode->children.end())
         {
-            auto objFullPath = path.sliced(0, path.indexOf(s)+s.length());
-
-            // https://stackoverflow.com/a/36848326
-            fs::path repoPathStdFS(repoPath.toStdString());
-            fs::path itemPathPrependStdFS(path.sliced(0, path.indexOf(s)).toStdString());
-            fs::path itemPathStdFS(itemPathPrependStdFS / s.toStdString());
-            fs::path fsPath(repoPathStdFS / itemPathStdFS);
+            if (i == 0)
+                objFullPath = split[i];
+            else
+                objFullPath += std::filesystem::path::preferred_separator + split[i];
 
             // generate absolute path
-            auto objAbsPath  = QString::fromStdString(fsPath);
+            fs::path repoPathStdFS(repoPath.toStdString());
+            fs::path fsPath(repoPathStdFS / objFullPath.toStdString());
+            QString objAbsPath = QString::fromStdString(fsPath);
 
             // TODO: migrate to RavenFile class for all this.
             RavenFile f;
             auto isBinary = f.checkFileIsBinary(objAbsPath);
             std::optional<QStringConverter::Encoding> encodingOpt = f.detectEncoding(objAbsPath);
-            auto *obj = RavenTreeModel::createNode(s, objFullPath, objAbsPath, status.flag, isBinary, false, status.deleted, encodingOpt);
+            auto *obj = RavenTreeModel::createNode(pathPart, objFullPath, objAbsPath, status.flag, isBinary, false, status.deleted, encodingOpt);
             obj->initiator = currentNode->initiator;
             currentNode->children.append(obj);
             currentNode = obj;
