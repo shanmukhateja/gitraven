@@ -34,6 +34,8 @@ private:
 
     void onStageItem(RavenTreeItem *treeItem);
     void onUnstageItem(RavenTreeItem *treeItem);
+    void onDeleteRequested(RavenTreeItem *treeItem);
+
     void mouseReleaseEvent(QMouseEvent *event) override;
 
     struct RavenTreeBuildHelper {
@@ -45,6 +47,16 @@ private:
         GitManager::GitStatusItem status;
     };
     void _buildTree(RavenTreeBuildHelper helper);
+
+    void initCustomActions();
+    void buildContextMenuForTreeItem(RavenTreeItem* treeItem);
+    void OnContextMenuRequested(const QPoint &pos);
+
+    QMenu *m_contextMenu;
+    QAction* m_deleteAction;
+    QAction* m_stageAction;
+    QAction* m_unstageAction;
+    QList<QAction*> m_contextMenuActionsList;
 };
 
 #endif // RAVENTREE_H

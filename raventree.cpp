@@ -4,9 +4,11 @@
 #include "ravenfile.h"
 #include "raventreedelegate.h"
 #include "ravenlhsview.h"
+#include "ravenutils.h"
 
 #include <QVBoxLayout>
 #include <QMessageBox>
+#include <QMenu>
 
 #include <filesystem>
 
@@ -15,7 +17,8 @@ namespace fs = std::filesystem;
 RavenTree::RavenTree(GitManager *gitManager, QWidget *parent)
     : QTreeView{parent},
     m_gitManager(gitManager),
-    m_model(new RavenTreeModel(this))
+    m_model(new RavenTreeModel(this)),
+    m_contextMenu{new QMenu(this)}
 {
     m_lhsView = (RavenLHSView*) parent;
 
@@ -24,6 +27,8 @@ RavenTree::RavenTree(GitManager *gitManager, QWidget *parent)
         buildTree(m_gitManager->getRepoPath(), sd);
     }, Qt::QueuedConnection);
 
+    // Context menu
+    initCustomActions();
     // Set model
     setModel(m_model);
     // Enable mouse tracking so we can stage/unstage items
@@ -34,6 +39,67 @@ RavenTree::RavenTree(GitManager *gitManager, QWidget *parent)
     // click listener
     connect(this, &QAbstractItemView::activated, this, &RavenTree::onFileOpened);
     connect(this, &QAbstractItemView::clicked, this, &RavenTree::onFileOpened);
+}
+
+void RavenTree::initCustomActions()
+{
+    setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(this, &QTreeView::customContextMenuRequested, this, &RavenTree::OnContextMenuRequested);
+}
+
+void RavenTree::buildContextMenuForTreeItem(RavenTreeItem *treeItem)
+{
+    // Clear previous values
+    m_contextMenuActionsList.clear();
+    m_contextMenu->clear();
+
+    if (treeItem->initiator == RavenTreeItem::UNCOMMITTED)
+    {
+        // Stage action
+        m_stageAction = new QAction(QIcon::fromTheme("list-add"), "Stage", m_contextMenu);
+        connect(m_stageAction, &QAction::triggered, this, [this, treeItem]{
+            onStageItem(treeItem);
+        });
+        m_contextMenuActionsList.append(m_stageAction);
+
+        // Delete action
+        m_deleteAction = new QAction(QIcon::fromTheme("delete"), "Delete", m_contextMenu);
+        connect(m_deleteAction, &QAction::triggered, this, [this, treeItem]{
+            onDeleteRequested(treeItem);
+        });
+        m_contextMenuActionsList.append(m_deleteAction);
+    }
+
+    if (treeItem->initiator == RavenTreeItem::STAGING)
+    {
+        // Unstage action
+        m_unstageAction = new QAction(QIcon::fromTheme("list-remove"), "Unstage", m_contextMenu);
+        connect(m_unstageAction, &QAction::triggered, this, [this, treeItem]{
+            onUnstageItem(treeItem);
+        });
+        m_contextMenuActionsList.append(m_unstageAction);
+    }
+
+    m_contextMenu->addActions(m_contextMenuActionsList);
+}
+
+void RavenTree::OnContextMenuRequested(const QPoint &pos)
+{
+    auto index = indexAt(pos);
+    if (!index.isValid()) return;
+
+    auto item = (RavenTreeItem*) index.internalPointer();
+    if (!item->heading)
+    {
+        buildContextMenuForTreeItem(item);
+
+        // HACK: menu item y-axis is too high
+        QPoint *newPos = new QPoint(pos);
+        newPos->setY(pos.y() + 100);
+
+        // Show context menu
+        m_contextMenu->exec(viewport()->mapFromGlobal(*newPos));
+    }
 }
 
 void RavenTree::buildTree(QString repoPath, GitManager::status_data payload)
@@ -281,5 +347,19 @@ void RavenTree::onUnstageItem(RavenTreeItem* treeItem)
     }
     // refresh UI
     m_gitManager->statusAsync();
+}
+
+void RavenTree::onDeleteRequested(RavenTreeItem *treeItem)
+{
+    qDebug() << "RavenTree::onDeleteRequested called";
+    QMessageBox confirmDelete(QMessageBox::Question, "Delete Confirmation" , "Are you sure?", QMessageBox::Yes|QMessageBox::No);
+    confirmDelete.exec();
+
+    if (confirmDelete.result() == QMessageBox::Yes)
+    {
+        // FIXME: notify user if file deletion failed
+        RavenUtils::deleteFile(treeItem->absolutePath);
+        m_gitManager->statusAsync();
+    }
 }
 

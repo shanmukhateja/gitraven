@@ -83,6 +83,19 @@ public:
         return false;
     }
 
+    static bool deleteFile(QString absPath)
+    {
+        try {
+            auto isDirectory = std::filesystem::is_directory(absPath.toStdString());
+            if (isDirectory) return std::filesystem::remove_all(absPath.toStdString());
+
+            return std::filesystem::remove(absPath.toStdString());
+        } catch (...) {
+            // FIXME: Show error
+            return false;
+        }
+    }
+
     static std::optional<QStringConverter::Encoding> getQStringConvEncodingForLibMagicName(const char *name) {
 
         if (strcmp(name,"us-ascii") == 0) return QStringConverter::Encoding::Utf8;
