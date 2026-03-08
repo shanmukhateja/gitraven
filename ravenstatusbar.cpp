@@ -11,19 +11,22 @@ RavenStatusBar::RavenStatusBar(QWidget *parent)
     auto window = (qobject_cast<MainWindow *>(parent->window()));
     m_gitCheckoutDialog = new RavenGitCheckoutDialog(window->getGitManager(), this);
 
+    auto branchLabel = new QLabel("Current HEAD:");
     m_headStatusButton = new QPushButton("");
     m_headStatusButton->setDisabled(true);
     connect(m_headStatusButton, &QPushButton::clicked, this, &RavenStatusBar::onHEADStatusButtonClicked);
+    
+    layout()->addWidget(branchLabel);
     layout()->addWidget(m_headStatusButton);
+    layout()->addWidget(new QLabel());
 
-    // Change status bar's checkout ref name when GitManager::status is called
+    // Change status bar's checkout ref name when GitManager::status is updated
     connect(
         window->getGitManager(),
-        &GitManager::signalHEADStatusChanged,
+        &GitManager::statusChanged,
         this,
-        [this](GitManager::GitHEADStatus headStatus)
-        {
-            onCheckoutRefLabelChange(headStatus);
+        [window, this]() {
+            slotHEADChange(window->getGitManager()->findHEADStatus());
         }
     );
 
@@ -38,7 +41,7 @@ void RavenStatusBar::onHEADStatusButtonClicked()
     emit m_gitCheckoutDialog->signalOnBranchChangeRequested();
 }
 
-void RavenStatusBar::onCheckoutRefLabelChange(GitManager::GitHEADStatus status)
+void RavenStatusBar::slotHEADChange(GitManager::GitHEADStatus status)
 {
     qDebug() << "RavenStatusBar::slotBranchNameChange called with HEAD name=" << status.name << "type=" << status.type;
 

@@ -81,7 +81,6 @@ public:
 
 signals:
     void statusChanged(GitManager::status_data payload);
-    void signalHEADStatusChanged(GitManager::GitHEADStatus status);
 
 private:
     git_repository *m_repo = nullptr;
