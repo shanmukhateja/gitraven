@@ -38,7 +38,7 @@ QModelIndex RavenTreeModel::parent(const QModelIndex &child) const
     if (childNode == rootNode || childNode == m_stagingRootNode || childNode == m_uncommittedRootNode) return QModelIndex();
 
     // Find the parent node by traversing the tree
-    RavenTreeItem *parentNode = recursiveFindParentNode(rootNode, childNode);
+    RavenTreeItem *parentNode = findParentNodeByPathAndInitiator(rootNode, childNode);
 
     // Handle invalid case
     if (!parentNode) return QModelIndex();
@@ -135,21 +135,40 @@ RavenTreeItem* RavenTreeModel::createNode(
     return node;
 }
 
-RavenTreeItem *RavenTreeModel::recursiveFindParentNode(RavenTreeItem *root, RavenTreeItem *child) const
+RavenTreeItem* RavenTreeModel::findParentNodeByPathAndInitiator(RavenTreeItem *root, RavenTreeItem *child)
 {
     RavenTreeItem *parentNode = nullptr;
-    for (RavenTreeItem* node : static_cast<const QList<RavenTreeItem*>>(root->children))
+    for (RavenTreeItem* node : root->children)
     {
-        // We need to find file/folder by path AND by RavenTreeCategory.
+        // We need to find parent node by path AND by RavenTreeCategory.
         if (node->absolutePath == child->absolutePath && (node->initiator == child->initiator)) {
             parentNode = root;
             break;
         }
 
-        parentNode = recursiveFindParentNode(node, child);
+        parentNode = RavenTreeModel::findParentNodeByPathAndInitiator(node, child);
 
         if (parentNode) break;
     }
 
     return parentNode;
+}
+
+RavenTreeItem *RavenTreeModel::findNodeByPathAndInitiator(RavenTreeItem *root, RavenTreeItem *child)
+{
+    RavenTreeItem *reqNode = nullptr;
+    for (RavenTreeItem* node : root->children)
+    {
+        // We need to find required node by path AND by RavenTreeCategory.
+        if (node->absolutePath == child->absolutePath && (node->initiator == child->initiator)) {
+            reqNode = node;
+            break;
+        }
+
+        reqNode = RavenTreeModel::findNodeByPathAndInitiator(node, child);
+
+        if (reqNode) break;
+    }
+
+    return reqNode;
 }

@@ -39,7 +39,8 @@ public:
         bool deleted,
         std::optional<QStringConverter::Encoding> encodingOpt
     );
-    RavenTreeItem *recursiveFindParentNode(RavenTreeItem *root, RavenTreeItem *child) const;
+    static RavenTreeItem *findParentNodeByPathAndInitiator(RavenTreeItem *root, RavenTreeItem *child);
+    static RavenTreeItem *findNodeByPathAndInitiator(RavenTreeItem *root, RavenTreeItem *child);
     bool isStagingEmpty() { return m_stagingRootNode->children.isEmpty(); }
 
 private:

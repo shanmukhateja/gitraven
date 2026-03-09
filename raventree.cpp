@@ -135,13 +135,11 @@ void RavenTree::buildTree(QString repoPath, GitManager::status_data payload)
     for (const auto status: statusItems)
     {
         auto path = status.path;
-        auto split = path.split(std::filesystem::path::preferred_separator);
 
         RavenTreeBuildHelper helper = {
             .repoPath = repoPath,
             .currentNode = rootNode,
             .path = path,
-            .split = split,
             .status = status
         };
 
@@ -193,33 +191,33 @@ void RavenTree::buildTree(QString repoPath, GitManager::status_data payload)
 
 void RavenTree::_buildTree(RavenTreeBuildHelper helper)
 {
-    auto split = helper.split;
+    auto path = helper.path;
+    auto split = path.split(std::filesystem::path::preferred_separator);
     auto currentNode = helper.currentNode;
     auto repoPath = helper.repoPath;
     auto status = helper.status;
-    auto path = helper.path;
 
-    QString objFullPath;
+    QString objFullPath = repoPath;
 
-    for (int i = 0; i < split.length(); ++i)
+    for (auto pathPart: std::as_const(split))
     {
-        auto pathPart = split.at(i);
+        // build path from pathPart
+        objFullPath += std::filesystem::path::preferred_separator + pathPart;
 
-        auto it = std::find_if(currentNode->children.begin(), currentNode->children.end(),
-                               [pathPart] (RavenTreeItem* node) {
-            return pathPart == node->name;
-        });
+        // Find parent node
+        RavenTreeItem *expNode = new RavenTreeItem();
+        expNode->absolutePath = objFullPath;
+        expNode->initiator = currentNode->initiator;
 
-        if (it == currentNode->children.end())
+        auto it = RavenTreeModel::findNodeByPathAndInitiator(currentNode, expNode);
+
+        // Node not found in tree, create new node
+        if (!it)
         {
-            if (i == 0)
-                objFullPath = split[i];
-            else
-                objFullPath += std::filesystem::path::preferred_separator + split[i];
-
             // generate absolute path
             fs::path repoPathStdFS(repoPath.toStdString());
-            fs::path fsPath(repoPathStdFS / objFullPath.toStdString());
+            fs::path objFullPathFSPath(objFullPath.toStdString());
+            fs::path fsPath(repoPathStdFS / objFullPathFSPath);
             QString objAbsPath = QString::fromStdString(fsPath);
 
             // TODO: migrate to RavenFile class for all this.
@@ -233,7 +231,8 @@ void RavenTree::_buildTree(RavenTreeBuildHelper helper)
         }
         else
         {
-            currentNode = *it;
+            // Parent node found.
+            currentNode = it;
         }
     }
 }

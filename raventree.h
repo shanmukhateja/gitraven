@@ -42,7 +42,6 @@ private:
         QString repoPath;
         RavenTreeItem *currentNode;
         QString path;
-        QStringList split;
 
         GitManager::GitStatusItem status;
     };
