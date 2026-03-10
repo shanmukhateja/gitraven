@@ -11,6 +11,7 @@
 #include <QStandardPaths>
 #include <QDir>
 #include <QCoreApplication>
+#include <QProcess>
 
 #include <algorithm>
 
@@ -111,6 +112,27 @@ public:
                            .append(QDir::separator())
                            .append("editor");
         return editorDir.filesystemAbsolutePath();
+    }
+
+    // https://forum.qt.io/topic/60226/how-to-open-directory-in-file-manager-and-highlight-specific-item-in-it/9?_=1773067256134
+    static void openNodeInFM(QString absPath)
+    {
+        QProcess proc;
+        QString output;
+        proc.start("xdg-mime", QStringList() << "query" << "default" << "inode/directory");
+        proc.waitForFinished();
+        output = proc.readLine().simplified();
+        if (output == "dolphin.desktop" || output == "org.kde.dolphin.desktop")
+            proc.startDetached("dolphin", QStringList() << "--select" << absPath);
+        else if (output == "nautilus.desktop" || output == "org.gnome.Nautilus.desktop"
+                 || output == "nautilus-folder-handler.desktop")
+            proc.startDetached("nautilus", QStringList() << "--no-desktop" << absPath);
+        else if (output == "caja-folder-handler.desktop")
+            proc.startDetached("caja", QStringList() << "--no-desktop" << absPath);
+        else if (output == "nemo.desktop")
+            proc.startDetached("nemo", QStringList() << "--no-desktop" << absPath);
+        else if (output == "kfmclient_dir.desktop")
+            proc.startDetached("konqueror", QStringList() << "--select" << absPath);
     }
 };
 

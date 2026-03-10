@@ -35,6 +35,7 @@ private:
     void onStageItem(RavenTreeItem *treeItem);
     void onUnstageItem(RavenTreeItem *treeItem);
     void onDeleteRequested(RavenTreeItem *treeItem);
+    void onOpenNodeInFMRequested(RavenTreeItem *treeItem);
 
     void mouseReleaseEvent(QMouseEvent *event) override;
 
@@ -55,6 +56,7 @@ private:
     QAction* m_deleteAction;
     QAction* m_stageAction;
     QAction* m_unstageAction;
+    QAction* m_openNodeInFMAction;
     QList<QAction*> m_contextMenuActionsList;
 };
 

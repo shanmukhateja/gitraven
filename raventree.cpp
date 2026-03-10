@@ -53,6 +53,18 @@ void RavenTree::buildContextMenuForTreeItem(RavenTreeItem *treeItem)
     m_contextMenuActionsList.clear();
     m_contextMenu->clear();
 
+    // Open file/folder in File Manager
+    if (!treeItem->deleted)
+    {
+        #if defined(__linux__)
+        m_openNodeInFMAction = new QAction(QIcon::fromTheme("open-link"), "Open in File Manager", m_contextMenu);
+        connect(m_openNodeInFMAction, &QAction::triggered, this, [this, treeItem]() {
+            onOpenNodeInFMRequested(treeItem);
+        });
+        m_contextMenuActionsList.append(m_openNodeInFMAction);
+        #endif
+    }
+
     if (treeItem->initiator == RavenTreeItem::UNCOMMITTED)
     {
         // Stage action
@@ -360,5 +372,12 @@ void RavenTree::onDeleteRequested(RavenTreeItem *treeItem)
         RavenUtils::deleteFile(treeItem->absolutePath);
         m_gitManager->statusAsync();
     }
+}
+
+void RavenTree::onOpenNodeInFMRequested(RavenTreeItem *treeItem)
+{
+    qDebug() << "RavenTree::onOpenNodeInFMRequested called";
+
+    RavenUtils::openNodeInFM(treeItem->absolutePath);
 }
 
