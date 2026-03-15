@@ -681,11 +681,75 @@ QString GitManager::checkoutToRef(GitBranchSelectorItem item)
         return getCheckoutErrorMessage();
     }
 
+    if (item.type == GIT_HEAD_TYPE_BRANCH)
+    {
+        // Check if local branch already exists
+        std::string nameSlice = item.name.sliced(item.name.indexOf("/")+1).toStdString();
+        const char *name = nameSlice.c_str();
+        QString localBranchName = QString("refs/heads/%1").arg(name);
+
+        git_object *existsObj;
+        int result = git_revparse_single(&existsObj, m_repo, localBranchName.toStdString().c_str());
+        git_object_free(existsObj);
+
+        // user requested checkout for branch(remote/local) and
+        // local branch exists.
+        if (result == 0)
+        {
+            // Update references to point to local branch instead
+            // so checkout happens on branch instead of target commit
+            git_object_free(treeish);
+            git_revparse_single(&treeish, m_repo, localBranchName.toStdString().c_str());
+            refName = localBranchName.toStdString().c_str();
+        }
+        // user requested checkout for remote branch and
+        // local branch doesn't exist
+        else if(item.isRemote && result != 0)
+        {
+            /*
+             * 1. Create a local branch that tracks remote branch
+             * 2. update HEAD to branch
+             * 3. Update local reference to branch ref in (1)
+            */
+            git_reference *out;
+            git_commit *target = (git_commit*) treeish;
+            result = git_branch_create(&out, m_repo, name, target, 0);
+            // qDebug() << result << getCheckoutErrorMessage();
+            if (result == 0)
+            {
+                // Last thing, local branch should track remote branch
+                result = git_branch_set_upstream(out, item.name.toStdString().c_str());
+
+                if (result == 0)
+                {
+                    // Update references to point to local branch so
+                    // git checkout happens on branch ref instead of commit ref
+                    git_object_free(treeish);
+                    git_revparse_single(&treeish, m_repo, localBranchName.toStdString().c_str());
+                    refName = localBranchName.toStdString().c_str();
+                }
+                else
+                {
+                    // Failed to set upstream branch for newly created local branch.
+                    // FIXME: Need to undo branch creation.
+                    git_object_free(treeish);
+                    git_reference_free(out);
+                    return getCheckoutErrorMessage();
+                }
+            }
+            else
+            {
+                // Branch creation failed, inform UI
+                git_reference_free(out);
+                return getCheckoutErrorMessage();
+            }
+        }
+    }
+
     git_checkout_options opts = GIT_CHECKOUT_OPTIONS_INIT;
     opts.checkout_strategy = GIT_CHECKOUT_SAFE;
 
     error = git_checkout_tree(m_repo, treeish, &opts);
-    git_object_free(treeish);
 
     if (error != 0) return getCheckoutErrorMessage();
 
