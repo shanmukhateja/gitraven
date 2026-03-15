@@ -46,8 +46,10 @@ RavenGitCheckoutDialog::RavenGitCheckoutDialog(GitManager *manager, QWidget* par
         }
         else
         {
-            // OK, reset warning and hide dialog
-            this->resetCheckoutWarningLabel();
+            // Checkout success, update UI
+            m_gitManager->statusAsync();
+
+            // OK hide dialog
             close();
         }
     });
@@ -122,11 +124,19 @@ void RavenGitCheckoutDialog::slotOnBranchChangeRequested()
             Q_UNREACHABLE();
         }
 
-        auto widgetItem = new QListWidgetItem(icon, item.name, m_list, QListWidgetItem::ItemType::UserType);
+        auto name = QString("%1 ( %2 )").arg(item.name, item.isRemote ? "Remote" : "Local");
+        auto widgetItem = new QListWidgetItem(icon, name, m_list, QListWidgetItem::ItemType::UserType);
         widgetItem->setData(Qt::UserRole, QVariant::fromValue(item));
     }
 
     exec();
+}
+
+// Before closing the dialog, reset warning label
+void RavenGitCheckoutDialog::closeEvent(QCloseEvent *e)
+{
+    this->resetCheckoutWarningLabel();
+    QDialog::closeEvent(e);
 }
 
 void RavenGitCheckoutDialog::resetCheckoutWarningLabel()

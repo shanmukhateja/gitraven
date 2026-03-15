@@ -20,6 +20,9 @@ signals:
 public slots:
     void slotOnBranchChangeRequested();
 
+protected:
+    void closeEvent(QCloseEvent *e) override;
+
 private:
     GitManager *m_gitManager;
 

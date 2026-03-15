@@ -670,36 +670,36 @@ QString GitManager::checkoutToRef(GitBranchSelectorItem item)
     qDebug() << "GitManager::slotCheckoutToRef called";
 
     std::string refName = this->generateRefName(&item);
+
     int error = -999;
     git_object *treeish = nullptr;
+
     error = git_revparse_single(&treeish, m_repo, refName.c_str());
-    // qDebug() << "revparse error=" << error;
-    if (error != 0) return getCheckoutErrorMessage();
-    git_checkout_options opts = GIT_CHECKOUT_OPTIONS_INIT;
-    opts.checkout_strategy = GIT_CHECKOUT_SAFE;
-    error = git_checkout_tree(m_repo, treeish, &opts);
-    // qDebug() << "checkout_tree error=" << error;
     if (error != 0)
     {
         git_object_free(treeish);
         return getCheckoutErrorMessage();
     }
-    error = git_repository_set_head(m_repo, refName.c_str());
 
+    git_checkout_options opts = GIT_CHECKOUT_OPTIONS_INIT;
+    opts.checkout_strategy = GIT_CHECKOUT_SAFE;
+
+    error = git_checkout_tree(m_repo, treeish, &opts);
+    git_object_free(treeish);
+
+    if (error != 0) return getCheckoutErrorMessage();
+
+    // Update HEAD reference to `refName`
     // FIXME: checkout to remote branches or tags lead to detached HEAD state.
+    error = git_repository_set_head(m_repo, refName.c_str());
 
     if (error == 0)
     {
-        // All ok
-        git_object_free(treeish);
-        // Update UI
-        // Note: Is this right place to call this function?
-        statusAsync();
+        // All ok, update UI
         return nullptr;
     }
     else
     {
-        git_object_free(treeish);
         // Failed to checkout, report error.
         return getCheckoutErrorMessage();
     }
