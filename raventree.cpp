@@ -24,8 +24,8 @@ RavenTree::RavenTree(GitManager *gitManager, QWidget *parent)
 
     // Update tree when Git status changes
     connect(m_gitManager, &GitManager::statusChanged, this,[this](GitManager::status_data sd){
-        buildTree(m_gitManager->getRepoPath(), sd);
-    }, Qt::QueuedConnection);
+        buildTree(m_gitManager->getRepoPath(), std::move(sd));
+    });
 
     // Context menu
     initCustomActions();
@@ -142,6 +142,11 @@ void RavenTree::buildTree(QString repoPath, GitManager::status_data payload)
         statusItems = statusItems.first(getMaxStatusFilesCount());
         // Inform LHSView to show warning banner
         emit m_lhsView->signalMaxStatusFileCountReached(true);
+    }
+    else
+    {
+        this->maxStatusFilesCountReached = false;
+        emit m_lhsView->signalMaxStatusFileCountReached(false);
     }
 
     for (const auto status: statusItems)

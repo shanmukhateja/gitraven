@@ -109,7 +109,6 @@ GitManager::GitHEADStatus GitManager::findHEADStatus()
         // [COMMIT] Set commit hash as branchName
         result.name = oid_to_str(*git_object_id(obj)).toUtf8();
         result.type = GIT_HEAD_TYPE_COMMIT;
-        git_object_free(obj);
     }
     else if (git_reference_peel(&obj, ref, GIT_OBJECT_TAG) == 0)
     {
@@ -129,6 +128,7 @@ GitManager::GitHEADStatus GitManager::findHEADStatus()
 
     // cleanup
     git_reference_free(ref);
+    git_object_free(obj);
 
     return result;
 }
