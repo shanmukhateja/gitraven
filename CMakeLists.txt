@@ -29,6 +29,9 @@ set(QT_VERSION_MAJOR 6)
 # Use local prefix for install()
 set(CMAKE_INSTALL_PREFIX "$ENV{HOME}/.local")
 
+# Used to run clang-format & clang-tidy on pre-commit Git hook 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 find_package(Qt6 REQUIRED COMPONENTS Widgets)
 find_package(Qt6 REQUIRED COMPONENTS Core)
 find_package(Qt6 REQUIRED COMPONENTS HttpServer)
