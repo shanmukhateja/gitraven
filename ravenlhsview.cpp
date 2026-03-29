@@ -9,7 +9,7 @@
 RavenLHSView::RavenLHSView(QWidget *parent)
     : QWidget(parent),
     m_mainWindow(static_cast<MainWindow*>(topLevelWidget()->window())),
-    m_treeView(new RavenTree(m_mainWindow->getGitManager(), this)),
+    m_treeView(new RavenTree(this)),
     m_maxStatusFileCountWarningLabel(new QLabel(this))
 {
     // Widget config
@@ -85,12 +85,12 @@ void RavenLHSView::buildMaxStatusFileCountWarningUI() {
 void RavenLHSView::getAllStagingItemAbsPathsAsync()
 {
     qDebug() << "RavenLHSView::getAllStagingItemAbsPathsAsync() called";
-    auto gitManager = m_mainWindow->getGitManager();
+    const auto gitManager = qApp->findChild<GitManager *>();
     connect(
         gitManager,
         &GitManager::statusChanged,
         this,
-        [this](GitManager::status_data statusResponse) {
+        [this](const GitManager::status_data& statusResponse) {
             QList<QString> paths;
             foreach (auto item, statusResponse.statusItems) {
                 if (item.category == RavenTreeItem::BOTH || item.category == RavenTreeItem::STAGING)
@@ -118,7 +118,7 @@ void RavenLHSView::updateCommitMessageUIState(bool state)
 void RavenLHSView::commit()
 {
     qDebug() << "RavenLHSView::commit() called";
-    auto gitManager = m_mainWindow->getGitManager();
+    auto gitManager = qApp->findChild<GitManager *>();
 
     // Extract absPaths from all children of staging root node.
 

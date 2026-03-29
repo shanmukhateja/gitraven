@@ -13,6 +13,14 @@ RavenTreeModel::RavenTreeModel(QObject *parent)
     // All child nodes will inherit this.
     m_stagingRootNode->initiator = RavenTreeItem::STAGING;
     m_uncommittedRootNode->initiator = RavenTreeItem::UNCOMMITTED;
+
+    m_folderIcon = QIcon::fromTheme("folder-symbolic");
+    m_folderIcon = QIcon::fromTheme("filename-title-amarok");
+}
+
+RavenTreeModel::~RavenTreeModel()
+{
+    delete rootNode;
 }
 
 QModelIndex RavenTreeModel::index(int row, int column, const QModelIndex &parent) const
@@ -62,7 +70,7 @@ int RavenTreeModel::columnCount(const QModelIndex &parent) const
 
 QVariant RavenTreeModel::data(const QModelIndex &index, int role) const
 {
-    if (!index.isValid()) return QVariant();
+    if (!index.isValid()) return {};
 
     RavenTreeItem *node = static_cast<RavenTreeItem*>(index.internalPointer());
 
@@ -73,9 +81,7 @@ QVariant RavenTreeModel::data(const QModelIndex &index, int role) const
 
     if (role == Qt::DecorationRole)
     {
-        auto iconName = (node->children.size() > 0) || node->heading ? "folder-symbolic" : "filename-title-amarok";
-        auto iconProvider = QIcon::fromTheme(iconName);
-        return iconProvider;
+        return (!node->children.empty()) || node->heading ? m_folderIcon : m_fileIcon;
     }
 
     if (role == Qt::ToolTipRole)
@@ -90,7 +96,7 @@ QVariant RavenTreeModel::data(const QModelIndex &index, int role) const
         return f;
     }
 
-    return QVariant();
+    return {};
 }
 
 QVariant RavenTreeModel::headerData(int section, Qt::Orientation orientation, int role) const
@@ -106,8 +112,13 @@ QVariant RavenTreeModel::headerData(int section, Qt::Orientation orientation, in
 void RavenTreeModel::clear()
 {
     beginResetModel();
+
+    qDeleteAll(m_uncommittedRootNode->children);
     m_uncommittedRootNode->children.clear();
+
+    qDeleteAll(m_stagingRootNode->children);
     m_stagingRootNode->children.clear();
+
     endResetModel();
 }
 
@@ -154,18 +165,21 @@ RavenTreeItem* RavenTreeModel::findParentNodeByPathAndInitiator(RavenTreeItem *r
     return parentNode;
 }
 
-RavenTreeItem *RavenTreeModel::findNodeByPathAndInitiator(RavenTreeItem *root, RavenTreeItem *child)
+RavenTreeItem * RavenTreeModel::findNodeByPathAndInitiator(
+    RavenTreeItem *root,
+    const QString &absolutePath,
+    const RavenTreeItem::RavenTreeCategory initiator)
 {
     RavenTreeItem *reqNode = nullptr;
     for (RavenTreeItem* node : root->children)
     {
         // We need to find required node by path AND by RavenTreeCategory.
-        if (node->absolutePath == child->absolutePath && (node->initiator == child->initiator)) {
+        if (node->absolutePath == absolutePath && (node->initiator == initiator)) {
             reqNode = node;
             break;
         }
 
-        reqNode = RavenTreeModel::findNodeByPathAndInitiator(node, child);
+        reqNode = RavenTreeModel::findNodeByPathAndInitiator(node, absolutePath, initiator);
 
         if (reqNode) break;
     }

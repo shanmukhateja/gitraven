@@ -7,12 +7,13 @@
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
-    app.setOrganizationDomain("com.github.shanmukhateja");
-    app.setApplicationName("gitraven-qt");
-    app.setWindowIcon(QIcon::fromTheme("git"));
+    QApplication::setOrganizationDomain("com.github.shanmukhateja");
+    QApplication::setApplicationName("gitraven-qt");
+    QApplication::setWindowIcon(QIcon::fromTheme("git"));
 
     std::optional<QString> gitRepoPath;
-    if (argc > 1) {
+    if (argc > 1)
+    {
         bool isDir = std::filesystem::is_directory(argv[1]);
         if (isDir) gitRepoPath = argv[1];
     }
@@ -32,12 +33,14 @@ int main(int argc, char *argv[])
     if (!gitRepoPath.has_value()) return 0;
 
     // Git init
-    GitManager *manager = new GitManager(gitRepoPath.value());
+    // GitManager will be owned by `app`.
+    // This way, MainWindow and it's widgets can acquire it via `qApp`
+    auto *manager = new GitManager(gitRepoPath.value(), &app);
 
     // MainWindow
-    MainWindow w(manager);
+    MainWindow w;
     w.show();
 
-    return app.exec();
+    return QApplication::exec();
 }
 

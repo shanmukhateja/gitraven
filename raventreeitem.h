@@ -16,7 +16,9 @@ public:
         BOTH
     };
 
-    RavenTreeItem();
+    explicit RavenTreeItem(QObject *parent = nullptr);
+    ~RavenTreeItem() override;
+
     QString name;
     QString fullPath;
     QString absolutePath;
@@ -30,7 +32,7 @@ public:
     // Used by UI to check if item is deleted.
     bool deleted;
     // Used by UI to show status as file is modified
-    bool modified() {
+    [[nodiscard]] bool modified() const {
         return flag == GIT_STATUS_WT_MODIFIED || flag == GIT_STATUS_INDEX_MODIFIED;
     }
 

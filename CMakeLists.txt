@@ -85,6 +85,13 @@ qt_add_executable(gitraven-qt
     ${PROJECT_SOURCES}
 )
 
+# ASAN stuff
+if(CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+    target_compile_options(gitraven-qt PRIVATE -fsanitize=address)
+    target_link_options(gitraven-qt PRIVATE -fsanitize=address)
+endif()
+
+
 target_link_libraries(gitraven-qt PRIVATE Qt6::Widgets)
 target_link_libraries(gitraven-qt PRIVATE Qt6::Core)
 target_link_libraries(gitraven-qt PRIVATE Qt6::Gui)

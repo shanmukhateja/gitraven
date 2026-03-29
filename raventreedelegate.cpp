@@ -5,7 +5,9 @@
 #include <QMouseEvent>
 #include <QPainter>
 
-RavenTreeDelegate::RavenTreeDelegate() {}
+RavenTreeDelegate::RavenTreeDelegate(QObject *parent)
+    : QStyledItemDelegate(parent)
+{}
 
 void RavenTreeDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const
 {

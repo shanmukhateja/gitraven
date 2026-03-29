@@ -711,7 +711,7 @@ QString GitManager::checkoutToRef(GitBranchSelectorItem item)
              * 2. update HEAD to branch
              * 3. Update local reference to branch ref in (1)
             */
-            git_reference *out;
+            git_reference *out = nullptr;
             git_commit *target = (git_commit*) treeish;
             result = git_branch_create(&out, m_repo, name, target, 0);
             // qDebug() << result << getCheckoutErrorMessage();

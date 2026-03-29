@@ -1,27 +1,28 @@
 #include "mainwindow.h"
+
+#include <QApplication>
+
 #include "ravenrhsview.h"
 #include "ravenstatusbar.h"
 
-#include <QEvent>
 #include <QGridLayout>
 #include <QSplitter>
 
-#include <QLabel>
 
-
-MainWindow::MainWindow(GitManager *manager, QWidget *parent)
-    : QMainWindow(parent),
-    m_git_manager{manager},
-    m_statusMessageDispatcher{new RavenStatusMessageDispatcher(this)}
+MainWindow::MainWindow()
+    : m_statusMessageDispatcher{new RavenStatusMessageDispatcher(this)}
 {
+    m_git_manager = qApp->findChild<GitManager*>();
     // Window stuff
     setGeometry(0,0, 1366, 768);
-    setWindowTitle(QString("GitRaven - '%1'").arg(manager->getRepoPath()));
+    setWindowTitle(QString("GitRaven - '%1'").arg(m_git_manager->getRepoPath()));
 
     // App layout stuff
 
     // Central widget
-    QWidget *centralWidget = new QWidget(this);
+    auto *centralWidget = new QWidget(this);
+    auto *layout = new QGridLayout;
+    centralWidget->setLayout(layout);
     setCentralWidget(centralWidget);
 
     // Splitter
@@ -33,7 +34,6 @@ MainWindow::MainWindow(GitManager *manager, QWidget *parent)
     splitter->addWidget(m_lhsView);
     splitter->addWidget(rhsView);
 
-    QGridLayout *layout = new QGridLayout(centralWidget);
     layout->addWidget(splitter);
 
     splitter->setSizes({width() / 6, width() / 2});
@@ -44,25 +44,9 @@ MainWindow::MainWindow(GitManager *manager, QWidget *parent)
 
     // Link status message dispatcher service to `RavenStatusBar::signalShowMessage`
     connect(m_statusMessageDispatcher, &RavenStatusMessageDispatcher::showMessage, statusBar, &RavenStatusBar::signalShowMessage);
-}
 
-MainWindow::~MainWindow()
-{
-    delete m_git_manager;
-}
-
-// https://forum.qt.io/post/424408
-bool MainWindow::event(QEvent *e)
-{
-    switch(e->type())
-    {
-    case QEvent::WindowActivate:
-        // refresh git status
-        // Note: This function is also called on first init.
-        getGitManager()->statusAsync();
-        break;
-    default:
-        break;
-    }
-    return QMainWindow::event(e);
+    // React to app state event to run statusAsync();
+    connect(qApp, &QApplication::applicationStateChanged, this, [this](const Qt::ApplicationState state) {
+        if (state == Qt::ApplicationActive) m_git_manager->statusAsync();
+    });
 }

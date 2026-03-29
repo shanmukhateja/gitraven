@@ -3,6 +3,7 @@
 
 #include "raventreeitem.h"
 #include <QAbstractItemModel>
+#include <QIcon>
 #include <QObject>
 
 #include <git2/status.h>
@@ -13,6 +14,7 @@ class RavenTreeModel: public QAbstractItemModel
 
 public:
     explicit RavenTreeModel(QObject *parent = nullptr);
+    ~RavenTreeModel();
 
     QModelIndex index(int row, int column,
                       const QModelIndex &parent = QModelIndex()) const override;
@@ -40,13 +42,16 @@ public:
         std::optional<QStringConverter::Encoding> encodingOpt
     );
     static RavenTreeItem *findParentNodeByPathAndInitiator(RavenTreeItem *root, RavenTreeItem *child);
-    static RavenTreeItem *findNodeByPathAndInitiator(RavenTreeItem *root, RavenTreeItem *child);
+    static RavenTreeItem *findNodeByPathAndInitiator(RavenTreeItem *root, const QString &absolutePath, RavenTreeItem::RavenTreeCategory initiator);
     bool isStagingEmpty() { return m_stagingRootNode->children.isEmpty(); }
 
 private:
     RavenTreeItem *rootNode;
     RavenTreeItem *m_uncommittedRootNode;
     RavenTreeItem *m_stagingRootNode;
+
+    QIcon m_folderIcon;
+    QIcon m_fileIcon;
 
 };
 

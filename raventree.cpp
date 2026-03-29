@@ -14,13 +14,13 @@
 
 namespace fs = std::filesystem;
 
-RavenTree::RavenTree(GitManager *gitManager, QWidget *parent)
+RavenTree::RavenTree(QWidget *parent)
     : QTreeView{parent},
-    m_gitManager(gitManager),
     m_model(new RavenTreeModel(this)),
     m_contextMenu{new QMenu(this)}
 {
-    m_lhsView = (RavenLHSView*) parent;
+    m_gitManager = qApp->findChild<GitManager *>();
+    m_lhsView = dynamic_cast<RavenLHSView *>(parent);
 
     // Update tree when Git status changes
     connect(m_gitManager, &GitManager::statusChanged, this,[this](GitManager::status_data sd){
@@ -30,16 +30,18 @@ RavenTree::RavenTree(GitManager *gitManager, QWidget *parent)
     // Context menu
     initCustomActions();
     // Set model
-    setModel(m_model);
+    QTreeView::setModel(m_model);
     // Enable mouse tracking so we can stage/unstage items
     setMouseTracking(true);
     // Use custom delegate to render custom UI elements.
-    setItemDelegate(new RavenTreeDelegate());
+    setItemDelegate(new RavenTreeDelegate(this));
 
     // click listener
     connect(this, &QAbstractItemView::activated, this, &RavenTree::onFileOpened);
     connect(this, &QAbstractItemView::clicked, this, &RavenTree::onFileOpened);
 }
+
+RavenTreeModel * RavenTree::model() const { return m_model; }
 
 void RavenTree::initCustomActions()
 {
@@ -206,7 +208,7 @@ void RavenTree::buildTree(QString repoPath, GitManager::status_data payload)
     }
 }
 
-void RavenTree::_buildTree(RavenTreeBuildHelper helper)
+void RavenTree::_buildTree(RavenTreeBuildHelper& helper)
 {
     auto path = helper.path;
     auto split = path.split(std::filesystem::path::preferred_separator);
@@ -221,12 +223,9 @@ void RavenTree::_buildTree(RavenTreeBuildHelper helper)
         // build path from pathPart
         objFullPath += std::filesystem::path::preferred_separator + pathPart;
 
-        // Find parent node
-        RavenTreeItem *expNode = new RavenTreeItem();
-        expNode->absolutePath = objFullPath;
-        expNode->initiator = currentNode->initiator;
+        // Goal: Find parent node
 
-        auto it = RavenTreeModel::findNodeByPathAndInitiator(currentNode, expNode);
+        auto it = RavenTreeModel::findNodeByPathAndInitiator(currentNode, objFullPath, currentNode->initiator);
 
         // Node not found in tree, create new node
         if (!it)
@@ -248,7 +247,7 @@ void RavenTree::_buildTree(RavenTreeBuildHelper helper)
         }
         else
         {
-            // Parent node found.
+            // 2. Parent node found.
             currentNode = it;
         }
     }
@@ -271,11 +270,8 @@ void RavenTree::onFileOpened(const QModelIndex &index)
 
     qDebug() << "RavenTree::onFileOpened name=" << item->name;
 
-    auto topw = topLevelWidget()->window();
-    MainWindow *mainWindow = static_cast<MainWindow*>(topw);
-
     // Get diff item to be shared to editor.
-    auto diffItem = mainWindow->getGitManager()->diff(item);
+    auto diffItem = m_gitManager->diff(item);
     // Update category of the item to `initiator` value.
     // This fixes issue where editor should not allow editing staged files.
     // FIXME: Should we fix it in GitManager?

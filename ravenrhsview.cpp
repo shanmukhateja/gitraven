@@ -40,7 +40,7 @@ void RavenRHSView::renderDiffItem(GitManager::GitDiffItem item)
     // Note: We add a delay so QWebEngine can initialize.
     // FIXME: remove delay logic here
     QTimer::singleShot(300, [this,item]{
-        m_ravenEditor->openDiffItem(std::move(item));
+        m_ravenEditor->openDiffItem(item);
     });
 }
 

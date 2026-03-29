@@ -1,7 +1,14 @@
 #include "raventreeitem.h"
-#include <qdebug.h>
 
-RavenTreeItem::RavenTreeItem() {}
+RavenTreeItem::RavenTreeItem(QObject *parent)
+    : QObject(parent)
+{}
+
+RavenTreeItem::~RavenTreeItem()
+{
+    qDeleteAll(children);
+    children.clear();
+}
 
 bool RavenTreeItem::checkIfFileDeleted(git_status_t status)
 {
