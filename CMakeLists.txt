@@ -89,10 +89,17 @@ qt_add_executable(gitraven-qt
 )
 
 # ASAN stuff
-if(CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
-    target_compile_options(gitraven-qt PRIVATE -fsanitize=address)
-    target_link_options(gitraven-qt PRIVATE -fsanitize=address)
-endif()
+# Note: This is disabled by default because it crashes QWebEngine EVERY time.
+#       If you need to debug QWebEngine stuff, do not enable this code
+#if(CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+#    # 1. Compile flags (The "Sensors")
+#    target_compile_options(gitraven-qt PRIVATE -fsanitize=address -fno-omit-frame-pointer)
+#
+#    # 2. Linker flags (The "Engine")
+#    # Using target_link_libraries with the flag is the most reliable way
+#    # to force the compiler driver to link the ASan runtime.
+#    target_link_libraries(gitraven-qt PRIVATE -fsanitize=address)
+#endif()
 
 
 target_link_libraries(gitraven-qt PRIVATE Qt6::Widgets)

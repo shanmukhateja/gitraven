@@ -5,29 +5,30 @@
 #include "mainwindow.h"
 #include "raveneditor.h"
 
+#include <QStackedWidget>
 #include <QVBoxLayout>
 #include <QWidget>
 
-class RavenRHSView : public QWidget
-{
+class RavenRHSView : public QWidget {
     Q_OBJECT
-public:
-    explicit RavenRHSView(RavenStatusMessageDispatcher *statusMsgDispatcher, QWidget *parent);
+  public:
+    explicit RavenRHSView(RavenStatusMessageDispatcher* statusMsgDispatcher, QWidget* parent);
     ~RavenRHSView() override;
 
     void initLandingInfo();
 
-public slots:
+  public slots:
     void renderDiffItem(GitManager::GitDiffItem item);
 
-private:
+  private:
     bool m_showLandingInfo = true;
 
-    MainWindow *m_mainWindow;
-    RavenTree   *m_ravenTree;
-    RavenEditor *m_ravenEditor;
+    MainWindow* m_mainWindow;
+    RavenTree* m_ravenTree;
+    RavenEditor* m_ravenEditor;
 
-    QWidget *m_landingInfoWidget;
+    QStackedWidget* m_stackedWidget;
+    QWidget* m_landingInfoWidget;
 };
 
 #endif // RAVENRHSVIEW_H

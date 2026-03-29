@@ -3,49 +3,43 @@
 
 #include <QTimer>
 
-RavenRHSView::RavenRHSView(RavenStatusMessageDispatcher *statusMsgDispatcher, QWidget *parent)
-    : QWidget{parent},
-    m_mainWindow(static_cast<MainWindow*>(topLevelWidget()->window())),
-    m_ravenEditor{new RavenEditor(statusMsgDispatcher, this)},
-    m_landingInfoWidget(new QWidget(this))
-{
-    // Setup UI
-    auto layout = new QVBoxLayout(this);
+RavenRHSView::RavenRHSView(RavenStatusMessageDispatcher* statusMsgDispatcher, QWidget* parent)
+    : QWidget{parent}, m_mainWindow(static_cast<MainWindow*>(topLevelWidget()->window())),
+      m_ravenEditor{new RavenEditor(statusMsgDispatcher, this)}, m_landingInfoWidget(new QWidget(this)),
+      m_stackedWidget(new QStackedWidget(this)) {
+    auto mainLayout = new QVBoxLayout(this);
+    mainLayout->addWidget(m_stackedWidget);
+
+    // Page 0: Landing Info
+    m_landingInfoWidget = new QWidget(this);
     initLandingInfo();
+    m_stackedWidget->addWidget(m_landingInfoWidget);
+
+    // Page 1: The Editor (Create it ONCE)
+    m_ravenEditor = new RavenEditor(statusMsgDispatcher, this);
+    m_stackedWidget->addWidget(m_ravenEditor);
+
+    // Start with Landing Info
+    m_stackedWidget->setCurrentWidget(m_landingInfoWidget);
 
     // Event listeners
     m_ravenTree = m_mainWindow->getRavenLHSView()->getRavenTree();
     connect(m_ravenTree, &RavenTree::renderDiffItem, this, &RavenRHSView::renderDiffItem);
 }
 
-RavenRHSView::~RavenRHSView()
-{
+RavenRHSView::~RavenRHSView() {
     // cleanup
     disconnect(m_ravenTree, &RavenTree::renderDiffItem, this, &RavenRHSView::renderDiffItem);
 }
 
-void RavenRHSView::renderDiffItem(GitManager::GitDiffItem item)
-{
+void RavenRHSView::renderDiffItem(GitManager::GitDiffItem item) {
     qDebug() << "RavenRHSView::renderDiffItem called";
 
-    // Add WebView to layout if it's first time
-    if (m_showLandingInfo)
-    {
-        layout()->replaceWidget(m_landingInfoWidget, m_ravenEditor);
-        m_landingInfoWidget->deleteLater();
-        m_showLandingInfo = false;
-    }
-
-    // Render the diff
-    // Note: We add a delay so QWebEngine can initialize.
-    // FIXME: remove delay logic here
-    QTimer::singleShot(300, [this,item]{
-        m_ravenEditor->openDiffItem(item);
-    });
+    m_stackedWidget->setCurrentWidget(m_ravenEditor);
+    m_ravenEditor->openDiffItem(item);
 }
 
-void RavenRHSView::initLandingInfo()
-{
+void RavenRHSView::initLandingInfo() {
     // Add landing info widget to `this->layout()`
     auto widget = m_landingInfoWidget;
     layout()->addWidget(widget);
@@ -61,7 +55,7 @@ void RavenRHSView::initLandingInfo()
     iconLabel->setPixmap(icon.pixmap(64, 64));
     iconLabel->setAlignment(Qt::AlignHCenter);
 
-    auto *label = new QLabel("GitRaven", widget);
+    auto* label = new QLabel("GitRaven", widget);
     label->setAlignment(Qt::AlignHCenter);
     label->setStyleSheet("QLabel {font-size: 20px;}");
 

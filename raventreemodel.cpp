@@ -14,7 +14,7 @@ RavenTreeModel::RavenTreeModel(QObject* parent)
     m_uncommittedRootNode->initiator = RavenTreeItem::UNCOMMITTED;
 
     m_folderIcon = QIcon::fromTheme("folder-symbolic");
-    m_folderIcon = QIcon::fromTheme("filename-title-amarok");
+    m_fileIcon = QIcon::fromTheme("filename-title-amarok");
 }
 
 RavenTreeModel::~RavenTreeModel() { delete rootNode; }

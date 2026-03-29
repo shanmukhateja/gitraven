@@ -3,14 +3,10 @@
 #include <QGuiApplication>
 #include <QStyleHints>
 #include <QWebChannel>
-#include <qmessagebox.h>
 
 namespace fs = std::filesystem;
 
-RavenMonaco::RavenMonaco(QWidget *parent)
-    : QWebEngineView{parent},
-    m_page{new RavenMonacoPage(this)}
-{
+RavenMonaco::RavenMonaco(QWidget* parent) : QWebEngineView{parent}, m_page{new RavenMonacoPage(this)} {
     // Init page
     setPage(m_page);
 
@@ -28,7 +24,8 @@ RavenMonaco::RavenMonaco(QWidget *parent)
 
     // Light/dark theme switcher
     // FIXME: Can we move this to page instead?
-    QStyleHints *hint = QGuiApplication::styleHints();
+    QStyleHints* hint = QGuiApplication::styleHints();
     connect(hint, &QStyleHints::colorSchemeChanged, page(), &RavenMonacoPage::setTheme);
 }
 
+RavenMonaco::~RavenMonaco() {}
