@@ -83,39 +83,74 @@ void GitManager::statusAsync() {
 GitManager::GitHEADStatus GitManager::findHEADStatus() {
     GitHEADStatus result = {};
 
-    git_reference* ref;
-    git_repository_head(&ref, m_repo);
+    git_reference* ref = nullptr;
+    if (git_repository_head(&ref, m_repo) != 0) {
+        // error
+        // FIXME: Show error
+        return result;
+    }
+
+    // [BRANCH] EASY WAY
+    if (git_reference_is_branch(ref) == 1) {
+        auto branchName = "";
+        if (git_branch_name(&branchName, ref) == 0) {
+            result.name = branchName;
+            result.type = GIT_HEAD_TYPE_BRANCH;
+        }
+
+        // cleanup
+        if (ref)
+            git_reference_free(ref);
+        // return result
+        return result;
+    }
 
     // Find branch for HEAD
-    git_object* obj;
+    git_object* obj = nullptr;
 
-    if (git_reference_is_branch(ref) == 1) {
-        // [BRANCH] EASY WAY
-        const char* branchName = "";
-        git_branch_name(&branchName, ref);
-        result.name = branchName;
-        result.type = GIT_HEAD_TYPE_BRANCH;
-    } else if (git_reference_peel(&obj, ref, GIT_OBJECT_COMMIT) == 0) {
-        // [COMMIT] Set commit hash as branchName
+    // [COMMIT] Set commit hash as branchName
+    if (git_reference_peel(&obj, ref, GIT_OBJECT_COMMIT) == 0) {
         result.name = oid_to_str(*git_object_id(obj)).toUtf8();
         result.type = GIT_HEAD_TYPE_COMMIT;
-    } else if (git_reference_peel(&obj, ref, GIT_OBJECT_TAG) == 0) {
-        // [TAG] Locate commit by tag name
-        // FIXME:   Show tag name instead of commit hash.
-        git_tag* tag;
-        int error = git_tag_lookup(&tag, m_repo, git_object_id(obj));
+
+        // cleanup
+        if (obj)
+            git_object_free(obj);
+        if (ref)
+            git_reference_free(ref);
+
+        // return result
+        return result;
+    }
+
+    // [TAG]    Locate commit by tag name
+    // FIXME:   Show tag name instead of commit hash.
+    if (git_reference_peel(&obj, ref, GIT_OBJECT_TAG) == 0) {
+        git_tag* tag = nullptr;
+        const int error = git_tag_lookup(&tag, m_repo, git_object_id(obj));
         if (error == 0) {
             const char* tagName = git_tag_name(tag);
             result.name = QString::fromStdString(tagName);
             result.type = GIT_HEAD_TYPE_TAG;
-        }
 
-        git_tag_free(tag);
+            // cleanup
+            if (tag)
+                git_tag_free(tag);
+            if (obj)
+                git_object_free(obj);
+            if (ref)
+                git_reference_free(ref);
+
+            // return result
+            return result;
+        }
     }
 
     // cleanup
-    git_reference_free(ref);
-    git_object_free(obj);
+    if (obj)
+        git_object_free(obj);
+    if (ref)
+        git_reference_free(ref);
 
     return result;
 }
