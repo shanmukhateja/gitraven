@@ -3,21 +3,16 @@
 #include <QDialog>
 
 #include <QMessageBox>
+#include <QPushButton>
 #include <QVBoxLayout>
 
-RavenGitCheckoutDialog::RavenGitCheckoutDialog(GitManager *manager, QWidget* parent)
-    : QDialog{parent},
-    m_gitManager{manager},
-    m_checkoutStatusLabel{new QLabel(this)},
-    m_list{new QListWidget(this)},
-    m_searchList{new QLineEdit(this)},
-    m_checkoutButton(new QPushButton("Checkout", this))
-{
+RavenGitCheckoutDialog::RavenGitCheckoutDialog(GitManager* manager, QWidget* parent)
+    : QDialog{parent}, mainLayout(new QVBoxLayout(this)), m_gitManager{manager},
+      m_checkoutStatusLabel{new QLabel(this)}, m_list{new QListWidget(this)}, m_searchList{new QLineEdit(this)},
+      m_checkoutButton(new QPushButton("Checkout", this)) {
     setWindowTitle("Choose Branch/Tag to checkout");
     resize(600, 500);
 
-    // Create new layout with dialog as parent to "own" the layout.
-    auto *mainLayout = new QVBoxLayout(this);
     mainLayout->addWidget(m_checkoutStatusLabel);
     mainLayout->addWidget(m_searchList);
     mainLayout->addWidget(m_list);
@@ -31,21 +26,19 @@ RavenGitCheckoutDialog::RavenGitCheckoutDialog(GitManager *manager, QWidget* par
     // m_checkoutButton click event
     connect(m_checkoutButton, &QPushButton::clicked, this, [this] {
         auto selectionList = m_list->selectedItems();
-        if (selectionList.empty()) return;
+        if (selectionList.empty())
+            return;
 
         auto selectedItem = selectionList.first()->data(Qt::UserRole).value<GitManager::GitBranchSelectorItem>();
 
         QString resultOrErrorMsg = m_gitManager->checkoutToRef(selectedItem);
         m_checkoutStatusLabel->setHidden(false);
-        if (resultOrErrorMsg != nullptr)
-        {
+        if (resultOrErrorMsg != nullptr) {
             // Checkout failed, inform user.
             QString msg = QString("Checkout error: '%1'").arg(resultOrErrorMsg);
             m_checkoutStatusLabel->setText(msg);
             m_checkoutStatusLabel->setStyleSheet("background-color:red;color:white;padding:5px");
-        }
-        else
-        {
+        } else {
             // Checkout success, update UI
             m_gitManager->statusAsync();
 
@@ -55,36 +48,22 @@ RavenGitCheckoutDialog::RavenGitCheckoutDialog(GitManager *manager, QWidget* par
     });
 
     // Populate list with branches and tags when checkout button is clicked in statusBar.
-    connect(
-        this,
-        &RavenGitCheckoutDialog::signalOnBranchChangeRequested,
-        this,
-        &RavenGitCheckoutDialog::slotOnBranchChangeRequested
-    );
+    connect(this, &RavenGitCheckoutDialog::signalOnBranchChangeRequested, this,
+            &RavenGitCheckoutDialog::slotOnBranchChangeRequested);
 
-    connect(
-        m_searchList,
-        &QLineEdit::textChanged,
-        this,
-        [this](const QString &text)
-        {
-            for (int i = 0; i < m_list->count(); i++)
-            {
-                QListWidgetItem *item = m_list->item(i);
-                bool match = item->text().contains(text, Qt::CaseInsensitive);
-                item->setHidden(!match);
-            }
+    connect(m_searchList, &QLineEdit::textChanged, this, [this](const QString& text) {
+        for (int i = 0; i < m_list->count(); i++) {
+            QListWidgetItem* item = m_list->item(i);
+            bool match = item->text().contains(text, Qt::CaseInsensitive);
+            item->setHidden(!match);
         }
-    );
+    });
 
     // When user double-clicks on list item, auto click on Checkout button.
-    connect(m_list, &QListWidget::itemDoubleClicked, this, [this] {
-        m_checkoutButton->click();
-    });
+    connect(m_list, &QListWidget::itemDoubleClicked, this, [this] { m_checkoutButton->click(); });
 }
 
-void RavenGitCheckoutDialog::slotOnBranchChangeRequested()
-{
+void RavenGitCheckoutDialog::slotOnBranchChangeRequested() {
     qDebug() << "RavenGitCheckoutDialog::slotOnBranchChangeRequested() called";
 
     // Fetch all branches/tags
@@ -97,30 +76,21 @@ void RavenGitCheckoutDialog::slotOnBranchChangeRequested()
     m_list->clear();
 
     // Add new items
-    for (auto item : results)
-    {
+    for (auto item : results) {
         QIcon icon;
 
         // Set icon
-        if (item.type == GitManager::GIT_HEAD_TYPE_BRANCH)
-        {
+        if (item.type == GitManager::GIT_HEAD_TYPE_BRANCH) {
             // BRANCH
-            if (!item.isRemote)
-            {
-                icon = QIcon::fromTheme("branch-symbolic");
+            if (!item.isRemote) {
+                icon = m_branchIconLocal;
+            } else {
+                icon = m_branchIconRemote;
             }
-            else
-            {
-                icon = QIcon::fromTheme("vcs-branch-symbolic");
-            }
-        }
-        else if (item.type == GitManager::GIT_HEAD_TYPE_TAG)
-        {
+        } else if (item.type == GitManager::GIT_HEAD_TYPE_TAG) {
             // TAG
-            icon = QIcon::fromTheme("tag-symbolic");
-        }
-        else
-        {
+            icon = m_tagIcon;
+        } else {
             Q_UNREACHABLE();
         }
 
@@ -133,16 +103,15 @@ void RavenGitCheckoutDialog::slotOnBranchChangeRequested()
 }
 
 // Before closing the dialog, reset warning label
-void RavenGitCheckoutDialog::closeEvent(QCloseEvent *e)
-{
+void RavenGitCheckoutDialog::closeEvent(QCloseEvent* e) {
     this->resetCheckoutWarningLabel();
     QDialog::closeEvent(e);
 }
 
-void RavenGitCheckoutDialog::resetCheckoutWarningLabel()
-{
+void RavenGitCheckoutDialog::resetCheckoutWarningLabel() {
+    if (!m_checkoutStatusLabel)
+        return;
     m_checkoutStatusLabel->setText("");
     m_checkoutStatusLabel->setStyleSheet("");
     m_checkoutStatusLabel->setHidden(true);
 }
-
