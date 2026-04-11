@@ -1,17 +1,11 @@
 #include "ravenlhsview.h"
 
-#include "mainwindow.h"
-
 #include <QLabel>
 #include <QMessageBox>
 #include <QVBoxLayout>
 
-RavenLHSView::RavenLHSView(QWidget *parent)
-    : QWidget(parent),
-    m_mainWindow(static_cast<MainWindow*>(topLevelWidget()->window())),
-    m_treeView(new RavenTree(m_mainWindow->getGitManager(), this)),
-    m_maxStatusFileCountWarningLabel(new QLabel(this))
-{
+RavenLHSView::RavenLHSView(QWidget* parent)
+    : QWidget(parent), m_treeView(new RavenTree(this)), m_maxStatusFileCountWarningLabel(new QLabel(this)) {
     // Widget config
     auto layout = new QVBoxLayout(this);
     layout->addWidget(m_treeView);
@@ -19,7 +13,7 @@ RavenLHSView::RavenLHSView(QWidget *parent)
     layout->setStretch(0, 1);
 
     // Commit message UI
-    QLabel *commitMessageHeading = new QLabel(this);
+    QLabel* commitMessageHeading = new QLabel(this);
     commitMessageHeading->setText("Commit Message");
     layout->addWidget(commitMessageHeading);
 
@@ -46,31 +40,32 @@ RavenLHSView::RavenLHSView(QWidget *parent)
 
     // connect listeners
     connect(m_treeView->model(), &RavenTreeModel::dataChanged, this, &RavenLHSView::updateCommitMessageUI);
-    connect(m_commitMessageButton,&QPushButton::clicked, this, &RavenLHSView::commit);
+    connect(m_commitMessageButton, &QPushButton::clicked, this, &RavenLHSView::commit);
 
     // Max status file size banner
     connect(this, &RavenLHSView::signalMaxStatusFileCountReached, this, &RavenLHSView::slotMaxStatusFileCountReached);
 }
 
-void RavenLHSView::updateCommitMessageUI()
-{
+RavenLHSView::~RavenLHSView() = default;
+
+void RavenLHSView::updateCommitMessageUI() {
     // qDebug() << "RavenLHSView::updateCommitMessageUI called";
     auto model = m_treeView->model();
     auto stagingEmpty = model->isStagingEmpty();
     updateCommitMessageUIState(!stagingEmpty);
 }
 
-void RavenLHSView::slotMaxStatusFileCountReached(bool reached)
-{
+void RavenLHSView::slotMaxStatusFileCountReached(bool reached) {
     qDebug() << "RavenLHSView::slotMaxStatusFileCountReached called with reached=" << reached;
-    // Show message in UI
-    this->showMaxStatusFileCountWarning = reached;
     // Update layout if required
+    // qDebug() << "BEFORE isMaxStatusFileCountWarningVisible" << this->isMaxStatusFileCountWarningVisible;
     this->isMaxStatusFileCountWarningVisible = layout()->children().contains(this->m_maxStatusFileCountWarningLabel);
-    if (!this->isMaxStatusFileCountWarningVisible) this->buildMaxStatusFileCountWarningUI();
+    // qDebug() << "AFTER isMaxStatusFileCountWarningVisible" << this->isMaxStatusFileCountWarningVisible;
+    if (!this->isMaxStatusFileCountWarningVisible && reached)
+        this->buildMaxStatusFileCountWarningUI();
 }
 
-void RavenLHSView::buildMaxStatusFileCountWarningUI() {
+void RavenLHSView::buildMaxStatusFileCountWarningUI() const {
     QString msg;
     // FIXME: Use `QIcon` for warning icon.
     msg.append("⚠️ Large number of files detected, showing first ");
@@ -79,54 +74,45 @@ void RavenLHSView::buildMaxStatusFileCountWarningUI() {
     this->m_maxStatusFileCountWarningLabel->setText(msg);
     this->m_maxStatusFileCountWarningLabel->setStyleSheet("background-color:yellow;color:black;padding:5px");
     this->m_maxStatusFileCountWarningLabel->setWordWrap(true);
-    ((QVBoxLayout*)layout())->insertWidget(0, m_maxStatusFileCountWarningLabel);
+    dynamic_cast<QVBoxLayout*>(layout())->insertWidget(0, m_maxStatusFileCountWarningLabel);
 }
 
-void RavenLHSView::getAllStagingItemAbsPathsAsync()
-{
+void RavenLHSView::getAllStagingItemAbsPathsAsync() {
     qDebug() << "RavenLHSView::getAllStagingItemAbsPathsAsync() called";
-    auto gitManager = m_mainWindow->getGitManager();
+    const auto gitManager = qApp->findChild<GitManager*>();
     connect(
-        gitManager,
-        &GitManager::statusChanged,
-        this,
-        [this](GitManager::status_data statusResponse) {
+        gitManager, &GitManager::statusChanged, this,
+        [this](const GitManager::status_data& statusResponse) {
             QList<QString> paths;
             foreach (auto item, statusResponse.statusItems) {
-                if (item.category == RavenTreeItem::BOTH || item.category == RavenTreeItem::STAGING)
-                {
+                if (item.category == RavenTreeItem::BOTH || item.category == RavenTreeItem::STAGING) {
                     qDebug() << "staging item=" << item.path;
                     paths.append(item.path);
                 }
             }
             emit signalStagingItemAbsPathsReady(paths);
         },
-        Qt::SingleShotConnection
-    );
+        Qt::SingleShotConnection);
 
     gitManager->statusAsync();
 }
 
-void RavenLHSView::updateCommitMessageUIState(bool state)
-{
+void RavenLHSView::updateCommitMessageUIState(bool state) const {
     qDebug() << "RavenLHSView::updateCommitMessageUIState with state=" << state;
     m_commitMessageTextBox->setEnabled(state);
     m_commitMessageButton->setEnabled(state);
     m_amendCommitCheckbox->setEnabled(state);
 }
 
-void RavenLHSView::commit()
-{
+void RavenLHSView::commit() {
     qDebug() << "RavenLHSView::commit() called";
-    auto gitManager = m_mainWindow->getGitManager();
+    auto gitManager = qApp->findChild<GitManager*>();
 
     // Extract absPaths from all children of staging root node.
 
     // Handle response
     connect(
-        this,
-        &RavenLHSView::signalStagingItemAbsPathsReady,
-        this,
+        this, &RavenLHSView::signalStagingItemAbsPathsReady, this,
         [this, gitManager](QList<QString> paths) {
             QString msg = m_commitMessageTextBox->toPlainText();
 
@@ -135,36 +121,27 @@ void RavenLHSView::commit()
 
             int result = gitManager->commit(paths, msg, amend);
             qDebug() << "GitManager::commit result=" << result;
-            if (result == 0)
-            {
+            if (result == 0) {
                 qDebug() << "GitManager::commit success, updating UI";
                 // update UI
                 resetCommitMessageUI();
                 gitManager->statusAsync();
-            }
-            else
-            {
+            } else {
                 qDebug() << "GitManager::commit failed.";
                 // Failed to commit changes
-                QMessageBox msg(
-                    QMessageBox::Critical,
-                    "Error",
-                    "Failed to commit staged changes. Please check the logs for more information.",
-                    QMessageBox::Ok,
-                    this
-                );
+                QMessageBox msg(QMessageBox::Critical, "Error",
+                                "Failed to commit staged changes. Please check the logs for more information.",
+                                QMessageBox::Ok, this);
                 msg.exec();
             }
         },
-        Qt::SingleShotConnection
-    );
+        Qt::SingleShotConnection);
 
     // Trigger request
     getAllStagingItemAbsPathsAsync();
 }
 
-void RavenLHSView::resetCommitMessageUI()
-{
+void RavenLHSView::resetCommitMessageUI() const {
     m_commitMessageTextBox->setPlainText("");
     m_amendCommitCheckbox->setChecked(false);
 }

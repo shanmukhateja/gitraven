@@ -77,6 +77,14 @@ public:
     GitStageResponseCode unstageItem(RavenTreeItem *item);
     int commit(QList<QString> items, QString msg, bool amend);
     QList<GitManager::GitBranchSelectorItem> getAllBranchesAndTags();
+    /**
+     * @brief GitManager::checkoutToRef
+     * Checkout in `libgit2` doesn't switch branch, it simply checks files out on disk.
+     * Hence, we must call `git_repository_set_head` on success.
+     * More info: https://stackoverflow.com/a/46758861
+     * @param item The payload contains data used to checkout to ref (branch/tag)
+     * @return `nullptr` on success or QString with error message.
+     */
     QString checkoutToRef(GitBranchSelectorItem item);
 
 signals:

@@ -1,14 +1,13 @@
 #include "raveneditor.h"
-#include "ravenutils.h"
 #include "ravenmonacopage.h"
+#include "ravenutils.h"
 
-RavenEditor::RavenEditor(RavenStatusMessageDispatcher *statusMsgDispatcher, QWidget *parent)
-    : QWidget{parent},
-    m_statusMsgDispatcher(statusMsgDispatcher)
-{}
+RavenEditor::RavenEditor(RavenStatusMessageDispatcher* statusMsgDispatcher, QWidget* parent)
+    : QWidget{parent}, m_statusMsgDispatcher(statusMsgDispatcher) {}
 
-void RavenEditor::init()
-{
+RavenEditor::~RavenEditor() {}
+
+void RavenEditor::init() {
     auto layout = new QVBoxLayout(this);
     m_webEngineView = new RavenMonaco(this);
     layout->addWidget(m_webEngineView);
@@ -24,9 +23,8 @@ void RavenEditor::init()
     m_initFinished = true;
 }
 
-void RavenEditor::updateUI()
-{
-    auto *page = m_webEngineView->page();
+void RavenEditor::updateUI() {
+    auto* page = m_webEngineView->page();
 
     // Update text content
     page->updateText(m_diffItem);
@@ -37,26 +35,23 @@ void RavenEditor::updateUI()
     page->setReadonly(readonly);
 }
 
-void RavenEditor::openDiffItem(GitManager::GitDiffItem item)
-{
+void RavenEditor::openDiffItem(GitManager::GitDiffItem item) {
     qDebug() << "RavenEditor::openDiffItem called";
 
     // Update diff item ref.
-    m_diffItem = item;
+    m_diffItem = std::move(item);
 
     // Init & render diff
     // 1. Check if we have initialized.
     bool initFinished = m_initFinished;
-    if (initFinished)
-    {
+    if (initFinished) {
         // 2. Next, we check if page is initialized.
         initFinished = m_webEngineView->isInitFinished();
     }
     initFinished ? updateUI() : init();
 }
 
-void RavenEditor::slotSaveModifiedChanges(QString modifiedText)
-{
+void RavenEditor::slotSaveModifiedChanges(QString modifiedText) {
     qDebug() << "RavenEditor::slotSaveModifiedChanges(QString modifiedText) called!!!";
 
     auto filePath = m_diffItem.newFilePath;

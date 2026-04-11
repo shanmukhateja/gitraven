@@ -5,31 +5,32 @@
 #include "ravenmonaco.h"
 #include "ravenstatusmessagedispatcher.h"
 
+#include <QEvent>
 #include <QObject>
 #include <QSplitter>
 #include <QString>
 #include <QVBoxLayout>
 #include <QWebEngineView>
-#include <QEvent>
 
-class RavenEditor : public QWidget
-{
+class RavenEditor : public QWidget {
     Q_OBJECT
-public:
-    explicit RavenEditor(RavenStatusMessageDispatcher *statusMsgDispatcher, QWidget *parent = nullptr);
+  public:
+    explicit RavenEditor(RavenStatusMessageDispatcher* statusMsgDispatcher, QWidget* parent = nullptr);
+    ~RavenEditor();
 
     void init();
     void updateUI();
     void openDiffItem(GitManager::GitDiffItem item);
-signals:
+  signals:
     void signalSaveModifiedChanges(QString modified);
 
-protected slots:
+  protected slots:
     void slotSaveModifiedChanges(QString modifiedText);
 
-private:
-    RavenMonaco *m_webEngineView;
-    RavenStatusMessageDispatcher *m_statusMsgDispatcher;
+  private:
+    RavenMonaco* m_webEngineView = nullptr;
+    RavenStatusMessageDispatcher* m_statusMsgDispatcher = nullptr;
+    QVBoxLayout* m_layout = nullptr;
 
     GitManager::GitDiffItem m_diffItem;
 

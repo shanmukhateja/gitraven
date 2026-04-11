@@ -13,9 +13,9 @@ class RavenTree : public QTreeView
 {
     Q_OBJECT
 public:
-    explicit RavenTree(GitManager *gitManager, QWidget *parent = nullptr);
+    explicit RavenTree(QWidget *parent = nullptr);
 
-    RavenTreeModel *model() const { return m_model; }
+    [[nodiscard]] RavenTreeModel *model() const;
     int getMaxStatusFilesCount() { return MAX_STATUS_FILES_COUNT; }
 signals:
     void renderDiffItem(GitManager::GitDiffItem item);
@@ -46,7 +46,7 @@ private:
 
         GitManager::GitStatusItem status;
     };
-    void _buildTree(RavenTreeBuildHelper helper);
+    void _buildTree(RavenTreeBuildHelper& helper);
 
     void initCustomActions();
     void buildContextMenuForTreeItem(RavenTreeItem* treeItem);

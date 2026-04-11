@@ -4,21 +4,16 @@
 #include <QObject>
 #include <git2/status.h>
 
-
-class RavenTreeItem : public QObject
-{
+class RavenTreeItem : public QObject {
     Q_OBJECT
-public:
+  public:
+    enum RavenTreeCategory { STAGING, UNCOMMITTED, BOTH };
 
-    enum RavenTreeCategory {
-        STAGING,
-        UNCOMMITTED,
-        BOTH
-    };
+    explicit RavenTreeItem(QObject* parent = nullptr);
+    ~RavenTreeItem() override;
 
-    RavenTreeItem();
     QString name;
-    QString fullPath;
+    QString relativePath;
     QString absolutePath;
     bool binary;
     QList<RavenTreeItem*> children;
@@ -30,9 +25,7 @@ public:
     // Used by UI to check if item is deleted.
     bool deleted;
     // Used by UI to show status as file is modified
-    bool modified() {
-        return flag == GIT_STATUS_WT_MODIFIED || flag == GIT_STATUS_INDEX_MODIFIED;
-    }
+    [[nodiscard]] bool modified() const { return flag == GIT_STATUS_WT_MODIFIED || flag == GIT_STATUS_INDEX_MODIFIED; }
 
     static RavenTreeCategory getTreeCategoryByStatus(git_status_t status);
     static bool checkIfFileDeleted(git_status_t status);

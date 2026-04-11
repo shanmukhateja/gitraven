@@ -12,14 +12,9 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    explicit MainWindow(GitManager* manager = nullptr, QWidget *parent = nullptr);
-    ~MainWindow();
+    MainWindow();
 
-    bool event(QEvent * e) override;
-
-    RavenLHSView* getRavenLHSView() { return m_lhsView; }
-
-    GitManager* getGitManager() const { return m_git_manager; }
+    [[nodiscard]] RavenLHSView* getRavenLHSView() const { return m_lhsView; }
 
 private:
     RavenLHSView *m_lhsView = nullptr;

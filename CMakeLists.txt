@@ -29,6 +29,9 @@ set(QT_VERSION_MAJOR 6)
 # Use local prefix for install()
 set(CMAKE_INSTALL_PREFIX "$ENV{HOME}/.local")
 
+# Used to run clang-format & clang-tidy on pre-commit Git hook 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 find_package(Qt6 REQUIRED COMPONENTS Widgets)
 find_package(Qt6 REQUIRED COMPONENTS Core)
 find_package(Qt6 REQUIRED COMPONENTS HttpServer)
@@ -84,6 +87,20 @@ qt_add_executable(gitraven-qt
     MANUAL_FINALIZATION
     ${PROJECT_SOURCES}
 )
+
+# ASAN stuff
+# Note: This is disabled by default because it crashes QWebEngine EVERY time.
+#       If you need to debug QWebEngine stuff, do not enable this code
+#if(CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+#    # 1. Compile flags (The "Sensors")
+#    target_compile_options(gitraven-qt PRIVATE -fsanitize=address -fno-omit-frame-pointer)
+#
+#    # 2. Linker flags (The "Engine")
+#    # Using target_link_libraries with the flag is the most reliable way
+#    # to force the compiler driver to link the ASan runtime.
+#    target_link_libraries(gitraven-qt PRIVATE -fsanitize=address)
+#endif()
+
 
 target_link_libraries(gitraven-qt PRIVATE Qt6::Widgets)
 target_link_libraries(gitraven-qt PRIVATE Qt6::Core)

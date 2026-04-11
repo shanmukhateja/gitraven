@@ -1,0 +1,28 @@
+#!/bin/sh
+# Pre-commit hook: run clang-format and clang-tidy fixes
+
+# Directory where CMake generates compile_commands.json
+BUILD_DIR=build
+
+# Find all .cpp and .h files
+FILES=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(cpp|h)$')
+
+if [ -z "$FILES" ]; then
+    exit 0
+fi
+
+echo "Running clang-format..."
+# Apply clang-format in-place
+echo "$FILES" | xargs clang-format -i
+
+# Re-add formatted files to staging
+echo "$FILES" | xargs git add
+
+echo "Running clang-tidy fixes..."
+# Run clang-tidy -fix on staged files
+echo "$FILES" | xargs clang-tidy -p $BUILD_DIR -fix
+
+# Re-add clang-tidy modified files to staging
+echo "$FILES" | xargs git add
+
+exit 0
