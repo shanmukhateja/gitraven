@@ -43,7 +43,7 @@ QList<GitManager::GitBranchSelectorItem> GitManager::getAllBranchesAndTags() {
     git_branch_t branchType{GIT_BRANCH_ALL};
     git_branch_iterator* iter = nullptr;
     git_branch_iterator_new(&iter, m_repo, branchType);
-    git_reference* out;
+    git_reference* out = nullptr;
     while (git_branch_next(&out, &branchType, iter) == 0) {
         // Get name
         const char* bName = "";
