@@ -2,7 +2,7 @@
 BasedOnStyle: LLVM
 IndentWidth: 4
 ColumnLimit: 120
-PointerAlignment: Left  # binds * to variable name
+PointerAlignment: Right
 BraceWrapping:
   AfterFunction: true
   AfterClass: true
