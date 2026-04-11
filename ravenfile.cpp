@@ -2,29 +2,24 @@
 
 #include "ravenutils.h"
 
-RavenFile::RavenFile()
-{
+RavenFile::RavenFile() {
     m_magic_cookie = magic_open(MAGIC_MIME_ENCODING);
 
-    if (magic_load(m_magic_cookie, NULL) != 0)
-    {
+    if (magic_load(m_magic_cookie, NULL) != 0) {
         throw std::runtime_error("Failed to load libmagic");
     }
 }
 
-RavenFile::~RavenFile()
-{
-    magic_close(m_magic_cookie);
-}
+RavenFile::~RavenFile() { magic_close(m_magic_cookie); }
 
 // https://gist.github.com/vivithemage/9489378
-bool RavenFile::checkFileIsBinary(QString filePath)
-{
+bool RavenFile::checkFileIsBinary(QString filePath) {
     // 1. We do not consider empty files as binary
     //    Note: This check fixes a bug where empty file in FS
     //          cannot be modified.
     QFile f(filePath);
-    if (f.size() == 0) return false;
+    if (f.size() == 0)
+        return false;
 
     // 2. Check with libmagic
     assert(m_magic_cookie != NULL);
@@ -33,8 +28,7 @@ bool RavenFile::checkFileIsBinary(QString filePath)
     return encodingStr == "binary";
 }
 
-std::optional<QStringConverter::Encoding> RavenFile::detectEncoding(QString filePath)
-{
+std::optional<QStringConverter::Encoding> RavenFile::detectEncoding(QString filePath) {
     // qDebug() << "RavenFile::detectEncoding called" << filePath;
     const char *encoding = magic_file(m_magic_cookie, filePath.toStdString().c_str());
     auto encodingOpt = RavenUtils::getQStringConvEncodingForLibMagicName(encoding);

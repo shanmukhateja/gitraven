@@ -4,7 +4,7 @@
 #include <QApplication>
 #include <QFileDialog>
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
     QCoreApplication::setAttribute(Qt::AA_ShareOpenGLContexts);
     QApplication app(argc, argv);
     QApplication::setOrganizationDomain("com.github.shanmukhateja");
@@ -32,7 +32,7 @@ int main(int argc, char* argv[]) {
     // Git init
     // GitManager will be owned by `app`.
     // This way, MainWindow and it's widgets can acquire it via `qApp`
-    auto* manager = new GitManager(gitRepoPath.value(), &app);
+    auto *manager = new GitManager(gitRepoPath.value(), &app);
 
     // MainWindow
     MainWindow w;

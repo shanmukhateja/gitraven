@@ -3,8 +3,8 @@
 
 #include <QLabel>
 
-RavenStatusBar::RavenStatusBar(QWidget* parent) : QStatusBar{parent} {
-    m_gitManager = qApp->findChild<GitManager*>();
+RavenStatusBar::RavenStatusBar(QWidget *parent) : QStatusBar{parent} {
+    m_gitManager = qApp->findChild<GitManager *>();
     m_gitCheckoutDialog = new RavenGitCheckoutDialog(m_gitManager, this);
 
     m_headStatusButton = new QPushButton("", this);

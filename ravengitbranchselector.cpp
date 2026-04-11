@@ -4,15 +4,13 @@
 #include <QLabel>
 #include <QVBoxLayout>
 
-RavenGitBranchSelector::RavenGitBranchSelector(GitManager *manager, QWidget* parent)
-    : QWidget{parent},
-    m_gitManager(manager)
-{
-    connect(this, &RavenGitBranchSelector::signalOnBranchChangeRequested, this, &RavenGitBranchSelector::slotOnBranchChangeRequested);
+RavenGitBranchSelector::RavenGitBranchSelector(GitManager *manager, QWidget *parent)
+    : QWidget{parent}, m_gitManager(manager) {
+    connect(this, &RavenGitBranchSelector::signalOnBranchChangeRequested, this,
+            &RavenGitBranchSelector::slotOnBranchChangeRequested);
 }
 
-void RavenGitBranchSelector::slotOnBranchChangeRequested()
-{
+void RavenGitBranchSelector::slotOnBranchChangeRequested() {
     qDebug() << "RavenGitBranchSelector::handleOnBranchChangeRequested() called";
 
     // Fetch all branches/tags

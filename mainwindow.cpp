@@ -8,13 +8,10 @@
 #include <QGridLayout>
 #include <QSplitter>
 
-
-MainWindow::MainWindow()
-    : m_statusMessageDispatcher{new RavenStatusMessageDispatcher(this)}
-{
-    m_git_manager = qApp->findChild<GitManager*>();
+MainWindow::MainWindow() : m_statusMessageDispatcher{new RavenStatusMessageDispatcher(this)} {
+    m_git_manager = qApp->findChild<GitManager *>();
     // Window stuff
-    setGeometry(0,0, 1366, 768);
+    setGeometry(0, 0, 1366, 768);
     setWindowTitle(QString("GitRaven - '%1'").arg(m_git_manager->getRepoPath()));
 
     // App layout stuff
@@ -43,10 +40,12 @@ MainWindow::MainWindow()
     setStatusBar(statusBar);
 
     // Link status message dispatcher service to `RavenStatusBar::signalShowMessage`
-    connect(m_statusMessageDispatcher, &RavenStatusMessageDispatcher::showMessage, statusBar, &RavenStatusBar::signalShowMessage);
+    connect(m_statusMessageDispatcher, &RavenStatusMessageDispatcher::showMessage, statusBar,
+            &RavenStatusBar::signalShowMessage);
 
     // React to app state event to run statusAsync();
     connect(qApp, &QApplication::applicationStateChanged, this, [this](const Qt::ApplicationState state) {
-        if (state == Qt::ApplicationActive) m_git_manager->statusAsync();
+        if (state == Qt::ApplicationActive)
+            m_git_manager->statusAsync();
     });
 }

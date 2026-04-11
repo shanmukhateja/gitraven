@@ -3,8 +3,8 @@
 
 #include <QTimer>
 
-RavenRHSView::RavenRHSView(RavenStatusMessageDispatcher* statusMsgDispatcher, QWidget* parent)
-    : QWidget{parent}, m_mainWindow(static_cast<MainWindow*>(topLevelWidget()->window())),
+RavenRHSView::RavenRHSView(RavenStatusMessageDispatcher *statusMsgDispatcher, QWidget *parent)
+    : QWidget{parent}, m_mainWindow(static_cast<MainWindow *>(topLevelWidget()->window())),
       m_ravenEditor{new RavenEditor(statusMsgDispatcher, this)}, m_landingInfoWidget(new QWidget(this)),
       m_stackedWidget(new QStackedWidget(this)) {
     auto mainLayout = new QVBoxLayout(this);
@@ -55,7 +55,7 @@ void RavenRHSView::initLandingInfo() {
     iconLabel->setPixmap(icon.pixmap(64, 64));
     iconLabel->setAlignment(Qt::AlignHCenter);
 
-    auto* label = new QLabel("GitRaven", widget);
+    auto *label = new QLabel("GitRaven", widget);
     label->setAlignment(Qt::AlignHCenter);
     label->setStyleSheet("QLabel {font-size: 20px;}");
 

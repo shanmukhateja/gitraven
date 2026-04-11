@@ -3,7 +3,7 @@
 #include <QFont>
 #include <QIcon>
 
-RavenTreeModel::RavenTreeModel(QObject* parent)
+RavenTreeModel::RavenTreeModel(QObject *parent)
     : QAbstractItemModel(parent),
       rootNode(createNode("Root", "", "", GIT_STATUS_IGNORED, false, true, false, std::nullopt)),
       m_uncommittedRootNode(createNode("Changes", "", "", GIT_STATUS_IGNORED, false, true, false, std::nullopt)),
@@ -19,12 +19,12 @@ RavenTreeModel::RavenTreeModel(QObject* parent)
 
 RavenTreeModel::~RavenTreeModel() { delete rootNode; }
 
-QModelIndex RavenTreeModel::index(int row, int column, const QModelIndex& parent) const {
+QModelIndex RavenTreeModel::index(int row, int column, const QModelIndex &parent) const {
     if (!hasIndex(row, column, parent))
         return QModelIndex();
 
-    RavenTreeItem* parentNode = parent.isValid() ? static_cast<RavenTreeItem*>(parent.internalPointer()) : rootNode;
-    RavenTreeItem* childNode = parentNode->children.value(row);
+    RavenTreeItem *parentNode = parent.isValid() ? static_cast<RavenTreeItem *>(parent.internalPointer()) : rootNode;
+    RavenTreeItem *childNode = parentNode->children.value(row);
 
     // Ensure that the node is valid before creating the index
     if (!childNode)
@@ -33,18 +33,18 @@ QModelIndex RavenTreeModel::index(int row, int column, const QModelIndex& parent
     return createIndex(row, column, childNode);
 }
 
-QModelIndex RavenTreeModel::parent(const QModelIndex& child) const {
+QModelIndex RavenTreeModel::parent(const QModelIndex &child) const {
     if (!child.isValid())
         return QModelIndex();
 
-    RavenTreeItem* childNode = static_cast<RavenTreeItem*>(child.internalPointer());
+    RavenTreeItem *childNode = static_cast<RavenTreeItem *>(child.internalPointer());
 
     // If it's rootNode, return invalid QModelIndex
     if (childNode == rootNode || childNode == m_stagingRootNode || childNode == m_uncommittedRootNode)
         return QModelIndex();
 
     // Find the parent node by traversing the tree
-    RavenTreeItem* parentNode = findParentNodeByAbsPathAndInitiator(rootNode, childNode);
+    RavenTreeItem *parentNode = findParentNodeByAbsPathAndInitiator(rootNode, childNode);
 
     // Handle invalid case
     if (!parentNode)
@@ -55,19 +55,19 @@ QModelIndex RavenTreeModel::parent(const QModelIndex& child) const {
     return createIndex(row, 0, parentNode);
 }
 
-int RavenTreeModel::rowCount(const QModelIndex& parent) const {
+int RavenTreeModel::rowCount(const QModelIndex &parent) const {
     // Find row for given QModelIndex (if valid) or fallback to `rootNode`
-    auto node = parent.isValid() ? static_cast<RavenTreeItem*>(parent.internalPointer()) : rootNode;
+    auto node = parent.isValid() ? static_cast<RavenTreeItem *>(parent.internalPointer()) : rootNode;
     return node->children.count();
 }
 
-int RavenTreeModel::columnCount(const QModelIndex& parent) const { return 1; }
+int RavenTreeModel::columnCount(const QModelIndex &parent) const { return 1; }
 
-QVariant RavenTreeModel::data(const QModelIndex& index, int role) const {
+QVariant RavenTreeModel::data(const QModelIndex &index, int role) const {
     if (!index.isValid())
         return {};
 
-    RavenTreeItem* node = static_cast<RavenTreeItem*>(index.internalPointer());
+    RavenTreeItem *node = static_cast<RavenTreeItem *>(index.internalPointer());
 
     if (role == Qt::DisplayRole) {
         return node->name;
@@ -110,10 +110,10 @@ void RavenTreeModel::clear() {
     endResetModel();
 }
 
-RavenTreeItem* RavenTreeModel::createNode(const QString& name, const QString& fullPath, const QString& absPath,
+RavenTreeItem *RavenTreeModel::createNode(const QString &name, const QString &fullPath, const QString &absPath,
                                           git_status_t flag, bool binary, bool heading, bool deleted,
                                           std::optional<QStringConverter::Encoding> encodingOpt) {
-    RavenTreeItem* node = new RavenTreeItem;
+    RavenTreeItem *node = new RavenTreeItem;
     node->name = name;
     node->relativePath = fullPath;
     node->absolutePath = absPath;
@@ -126,9 +126,9 @@ RavenTreeItem* RavenTreeModel::createNode(const QString& name, const QString& fu
     return node;
 }
 
-RavenTreeItem* RavenTreeModel::findParentNodeByAbsPathAndInitiator(RavenTreeItem* root, RavenTreeItem* child) {
-    RavenTreeItem* parentNode = nullptr;
-    for (RavenTreeItem* node : root->children) {
+RavenTreeItem *RavenTreeModel::findParentNodeByAbsPathAndInitiator(RavenTreeItem *root, RavenTreeItem *child) {
+    RavenTreeItem *parentNode = nullptr;
+    for (RavenTreeItem *node : root->children) {
         // We need to find parent node by path AND by RavenTreeCategory.
         if (node->absolutePath == child->absolutePath && (node->initiator == child->initiator)) {
             parentNode = root;
@@ -144,10 +144,10 @@ RavenTreeItem* RavenTreeModel::findParentNodeByAbsPathAndInitiator(RavenTreeItem
     return parentNode;
 }
 
-RavenTreeItem* RavenTreeModel::findNodeByAbsPathAndInitiator(RavenTreeItem* root, const QString& absolutePath,
+RavenTreeItem *RavenTreeModel::findNodeByAbsPathAndInitiator(RavenTreeItem *root, const QString &absolutePath,
                                                              const RavenTreeItem::RavenTreeCategory initiator) {
-    RavenTreeItem* reqNode = nullptr;
-    for (RavenTreeItem* node : root->children) {
+    RavenTreeItem *reqNode = nullptr;
+    for (RavenTreeItem *node : root->children) {
         // We need to find required node by path AND by RavenTreeCategory.
         if (node->absolutePath == absolutePath && (node->initiator == initiator)) {
             reqNode = node;

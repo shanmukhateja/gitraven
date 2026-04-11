@@ -5,24 +5,19 @@
 #include <QMouseEvent>
 #include <QPainter>
 
-RavenTreeDelegate::RavenTreeDelegate(QObject *parent)
-    : QStyledItemDelegate(parent)
-{}
+RavenTreeDelegate::RavenTreeDelegate(QObject *parent) : QStyledItemDelegate(parent) {}
 
-void RavenTreeDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const
-{
+void RavenTreeDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const {
     painter->save();
     // Call base class' paint method to render default items
     QStyledItemDelegate::paint(painter, option, index);
 
     // Apply our changes on top of the default UI
-    if (index.isValid())
-    {
-        auto *treeItem = static_cast<RavenTreeItem*>(index.internalPointer());
+    if (index.isValid()) {
+        auto *treeItem = static_cast<RavenTreeItem *>(index.internalPointer());
 
         // Applicable to non-heading items only
-        if (treeItem->heading)
-        {
+        if (treeItem->heading) {
             painter->restore();
             return;
         }
@@ -39,22 +34,17 @@ void RavenTreeDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opt
         auto font = painter->font();
         font.setWeight(QFont::Weight::Bold);
 
-        if (treeItem->deleted)
-        {
+        if (treeItem->deleted) {
             // Show "Deleted" status
             painter->setFont(font);
             painter->setPen(isItemSelected ? option.palette.text().color() : Qt::red);
             painter->drawText(statusPoint, "D");
-        }
-        else if (treeItem->modified())
-        {
+        } else if (treeItem->modified()) {
             // Show "Uncommitted" status
             painter->setFont(font);
             painter->setPen(isItemSelected ? option.palette.text().color() : Qt::magenta);
             painter->drawText(statusPoint, "M");
-        }
-        else
-        {
+        } else {
             // Show "Uncommitted" status
             painter->setFont(font);
             painter->setPen(isItemSelected ? option.palette.text().color() : Qt::green);
@@ -76,29 +66,25 @@ void RavenTreeDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opt
         buttonOption.palette = option.palette;
 
         QStyle *style = QApplication::style();
-        
+
         // WORKAROUND: Hide the `border-bottom` for `buttonOption` when treeview row is selected
         QBrush buttonOptionBrush;
         buttonOptionBrush.setColor(Qt::GlobalColor::transparent);
         buttonOption.palette.setBrush(QPalette::ColorRole::HighlightedText, buttonOptionBrush);
 
-        if (treeItem->initiator == RavenTreeItem::STAGING)
-        {
+        if (treeItem->initiator == RavenTreeItem::STAGING) {
             // Show - icon
-            buttonOption.text="-";
+            buttonOption.text = "-";
             style->drawControl(QStyle::CE_PushButton, &buttonOption, painter);
-        }
-        else
-        {
+        } else {
             // Show + icon
-            buttonOption.text="+";
+            buttonOption.text = "+";
             style->drawControl(QStyle::CE_PushButton, &buttonOption, painter);
         }
     }
     painter->restore();
 }
 
-QSize RavenTreeDelegate::sizeHint(const QStyleOptionViewItem &option, const QModelIndex &index) const
-{
+QSize RavenTreeDelegate::sizeHint(const QStyleOptionViewItem &option, const QModelIndex &index) const {
     return QStyledItemDelegate::sizeHint(option, index);
 }

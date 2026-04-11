@@ -4,7 +4,7 @@
 #include <QMessageBox>
 #include <QVBoxLayout>
 
-RavenLHSView::RavenLHSView(QWidget* parent)
+RavenLHSView::RavenLHSView(QWidget *parent)
     : QWidget(parent), m_treeView(new RavenTree(this)), m_maxStatusFileCountWarningLabel(new QLabel(this)) {
     // Widget config
     auto layout = new QVBoxLayout(this);
@@ -13,7 +13,7 @@ RavenLHSView::RavenLHSView(QWidget* parent)
     layout->setStretch(0, 1);
 
     // Commit message UI
-    QLabel* commitMessageHeading = new QLabel(this);
+    QLabel *commitMessageHeading = new QLabel(this);
     commitMessageHeading->setText("Commit Message");
     layout->addWidget(commitMessageHeading);
 
@@ -74,15 +74,15 @@ void RavenLHSView::buildMaxStatusFileCountWarningUI() const {
     this->m_maxStatusFileCountWarningLabel->setText(msg);
     this->m_maxStatusFileCountWarningLabel->setStyleSheet("background-color:yellow;color:black;padding:5px");
     this->m_maxStatusFileCountWarningLabel->setWordWrap(true);
-    dynamic_cast<QVBoxLayout*>(layout())->insertWidget(0, m_maxStatusFileCountWarningLabel);
+    dynamic_cast<QVBoxLayout *>(layout())->insertWidget(0, m_maxStatusFileCountWarningLabel);
 }
 
 void RavenLHSView::getAllStagingItemAbsPathsAsync() {
     qDebug() << "RavenLHSView::getAllStagingItemAbsPathsAsync() called";
-    const auto gitManager = qApp->findChild<GitManager*>();
+    const auto gitManager = qApp->findChild<GitManager *>();
     connect(
         gitManager, &GitManager::statusChanged, this,
-        [this](const GitManager::status_data& statusResponse) {
+        [this](const GitManager::status_data &statusResponse) {
             QList<QString> paths;
             foreach (auto item, statusResponse.statusItems) {
                 if (item.category == RavenTreeItem::BOTH || item.category == RavenTreeItem::STAGING) {
@@ -106,7 +106,7 @@ void RavenLHSView::updateCommitMessageUIState(bool state) const {
 
 void RavenLHSView::commit() {
     qDebug() << "RavenLHSView::commit() called";
-    auto gitManager = qApp->findChild<GitManager*>();
+    auto gitManager = qApp->findChild<GitManager *>();
 
     // Extract absPaths from all children of staging root node.
 

@@ -14,10 +14,10 @@
 
 namespace fs = std::filesystem;
 
-RavenTree::RavenTree(QWidget* parent)
+RavenTree::RavenTree(QWidget *parent)
     : QTreeView{parent}, m_model(new RavenTreeModel(this)), m_contextMenu{new QMenu(this)} {
-    m_gitManager = qApp->findChild<GitManager*>();
-    m_lhsView = dynamic_cast<RavenLHSView*>(parent);
+    m_gitManager = qApp->findChild<GitManager *>();
+    m_lhsView = dynamic_cast<RavenLHSView *>(parent);
 
     // Update tree when Git status changes
     connect(m_gitManager, &GitManager::statusChanged, this,
@@ -37,14 +37,14 @@ RavenTree::RavenTree(QWidget* parent)
     connect(this, &QAbstractItemView::clicked, this, &RavenTree::onFileOpened);
 }
 
-RavenTreeModel* RavenTree::model() const { return m_model; }
+RavenTreeModel *RavenTree::model() const { return m_model; }
 
 void RavenTree::initCustomActions() {
     setContextMenuPolicy(Qt::CustomContextMenu);
     connect(this, &QTreeView::customContextMenuRequested, this, &RavenTree::OnContextMenuRequested);
 }
 
-void RavenTree::buildContextMenuForTreeItem(RavenTreeItem* treeItem) {
+void RavenTree::buildContextMenuForTreeItem(RavenTreeItem *treeItem) {
     // Clear previous values
     m_contextMenuActionsList.clear();
     m_contextMenu->clear();
@@ -81,17 +81,17 @@ void RavenTree::buildContextMenuForTreeItem(RavenTreeItem* treeItem) {
     m_contextMenu->addActions(m_contextMenuActionsList);
 }
 
-void RavenTree::OnContextMenuRequested(const QPoint& pos) {
+void RavenTree::OnContextMenuRequested(const QPoint &pos) {
     auto index = indexAt(pos);
     if (!index.isValid())
         return;
 
-    auto item = (RavenTreeItem*)index.internalPointer();
+    auto item = (RavenTreeItem *)index.internalPointer();
     if (!item->heading) {
         buildContextMenuForTreeItem(item);
 
         // HACK: menu item y-axis is too high
-        QPoint* newPos = new QPoint(pos);
+        QPoint *newPos = new QPoint(pos);
         newPos->setY(pos.y() + 100);
 
         // Show context menu
@@ -103,7 +103,7 @@ void RavenTree::buildTree(QString repoPath, GitManager::status_data payload) {
     qDebug() << "RavenTree::buildTree called";
     QList<GitManager::GitStatusItem> statusItems = payload.statusItems;
 
-    RavenTreeItem* rootNode = m_model->getRootNode();
+    RavenTreeItem *rootNode = m_model->getRootNode();
     int rowCount = m_model->rowCount();
 
     // Clear previous items
@@ -171,7 +171,7 @@ void RavenTree::buildTree(QString repoPath, GitManager::status_data payload) {
     }
 }
 
-void RavenTree::_buildTree(RavenTreeBuildHelper& helper) {
+void RavenTree::_buildTree(RavenTreeBuildHelper &helper) {
     auto path = helper.path;
     auto split = path.split(std::filesystem::path::preferred_separator);
     auto currentNode = helper.currentNode;
@@ -203,7 +203,7 @@ void RavenTree::_buildTree(RavenTreeBuildHelper& helper) {
             RavenFile f;
             auto isBinary = f.checkFileIsBinary(objAbsPath);
             std::optional<QStringConverter::Encoding> encodingOpt = f.detectEncoding(objAbsPath);
-            auto* obj = RavenTreeModel::createNode(pathPart, currentPathStr, objAbsPath, status.flag, isBinary, false,
+            auto *obj = RavenTreeModel::createNode(pathPart, currentPathStr, objAbsPath, status.flag, isBinary, false,
                                                    status.deleted, encodingOpt);
             obj->initiator = currentNode->initiator;
             currentNode->children.append(obj);
@@ -215,11 +215,11 @@ void RavenTree::_buildTree(RavenTreeBuildHelper& helper) {
     }
 }
 
-void RavenTree::onFileOpened(const QModelIndex& index) {
+void RavenTree::onFileOpened(const QModelIndex &index) {
     if (!index.isValid())
         return;
 
-    RavenTreeItem* item = static_cast<RavenTreeItem*>(index.internalPointer());
+    RavenTreeItem *item = static_cast<RavenTreeItem *>(index.internalPointer());
 
     // We do not show diff items for root nodes.
     if (item->heading)
@@ -245,11 +245,11 @@ void RavenTree::onFileOpened(const QModelIndex& index) {
     emit renderDiffItem(diffItem);
 }
 
-void RavenTree::mouseReleaseEvent(QMouseEvent* event) {
-    QMouseEvent* mouseEvent = static_cast<QMouseEvent*>(event);
+void RavenTree::mouseReleaseEvent(QMouseEvent *event) {
+    QMouseEvent *mouseEvent = static_cast<QMouseEvent *>(event);
     auto index = indexAt(event->pos());
     if (index.isValid()) {
-        auto treeItem = static_cast<RavenTreeItem*>(index.internalPointer());
+        auto treeItem = static_cast<RavenTreeItem *>(index.internalPointer());
 
         auto rowRect = visualRect(index);
         auto stageOrUnstageButtonRect = rowRect;
@@ -269,7 +269,7 @@ void RavenTree::mouseReleaseEvent(QMouseEvent* event) {
     QTreeView::mouseReleaseEvent(event);
 }
 
-void RavenTree::onStageItem(RavenTreeItem* treeItem) {
+void RavenTree::onStageItem(RavenTreeItem *treeItem) {
     qDebug() << "RavenTree::onStageItem called";
 
     int result = m_gitManager->stageItem(treeItem);
@@ -287,7 +287,7 @@ void RavenTree::onStageItem(RavenTreeItem* treeItem) {
     m_gitManager->statusAsync();
 }
 
-void RavenTree::onUnstageItem(RavenTreeItem* treeItem) {
+void RavenTree::onUnstageItem(RavenTreeItem *treeItem) {
     qDebug() << "RavenTree::onUnstageItem called";
 
     int result = m_gitManager->unstageItem(treeItem);
@@ -305,7 +305,7 @@ void RavenTree::onUnstageItem(RavenTreeItem* treeItem) {
     m_gitManager->statusAsync();
 }
 
-void RavenTree::onDeleteRequested(RavenTreeItem* treeItem) {
+void RavenTree::onDeleteRequested(RavenTreeItem *treeItem) {
     qDebug() << "RavenTree::onDeleteRequested called";
     QMessageBox confirmDelete(QMessageBox::Question, "Delete Confirmation", "Are you sure?",
                               QMessageBox::Yes | QMessageBox::No);
@@ -318,7 +318,7 @@ void RavenTree::onDeleteRequested(RavenTreeItem* treeItem) {
     }
 }
 
-void RavenTree::onOpenNodeInFMRequested(RavenTreeItem* treeItem) {
+void RavenTree::onOpenNodeInFMRequested(RavenTreeItem *treeItem) {
     qDebug() << "RavenTree::onOpenNodeInFMRequested called";
 
     RavenUtils::openNodeInFM(treeItem->absolutePath);

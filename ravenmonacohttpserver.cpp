@@ -7,16 +7,11 @@
 using std::filesystem::absolute;
 using std::filesystem::path;
 
-RavenMonacoHTTPServer::RavenMonacoHTTPServer(QObject *parent)
-    : QObject(parent) {}
+RavenMonacoHTTPServer::RavenMonacoHTTPServer(QObject *parent) : QObject(parent) {}
 
-RavenMonacoHTTPServer::~RavenMonacoHTTPServer()
-{
-    m_tcpserver->close();
-}
+RavenMonacoHTTPServer::~RavenMonacoHTTPServer() { m_tcpserver->close(); }
 
-int RavenMonacoHTTPServer::init()
-{
+int RavenMonacoHTTPServer::init() {
     qDebug() << "RavenMonacoHTTPServer::init() called";
 
     if (!m_tcpserver->listen(QHostAddress::LocalHost, PORT) || !m_server->bind(m_tcpserver)) {
@@ -24,7 +19,7 @@ int RavenMonacoHTTPServer::init()
         return -1;
     }
 
-    m_server->route("/<arg>", [] (const QUrl &url) {
+    m_server->route("/<arg>", [](const QUrl &url) {
         QString urlPath = url.path();
 
         if (urlPath.length() < 5) {

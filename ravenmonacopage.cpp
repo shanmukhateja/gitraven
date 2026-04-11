@@ -5,11 +5,11 @@
 #include <QMessageBox>
 #include <QStyleHints>
 
-RavenMonacoPage::RavenMonacoPage(QObject* parent) : QWebEnginePage(parent) {
+RavenMonacoPage::RavenMonacoPage(QObject *parent) : QWebEnginePage(parent) {
     // Update QWebEnginePage theme
     // Note:    This is required to avoid "white flash"
     //          when RavenMonaco is loading this page.
-    QStyleHints* hints = QGuiApplication::styleHints();
+    QStyleHints *hints = QGuiApplication::styleHints();
     bool isLightTheme = hints->colorScheme() == Qt::ColorScheme::Light;
     if (!isLightTheme) {
         setBackgroundColor(QColor(30, 30, 30));
@@ -30,7 +30,7 @@ void RavenMonacoPage::init() {
         }
 
         // Call init() function
-        this->runJavaScript("init()", 0, [this](const QVariant&) {
+        this->runJavaScript("init()", 0, [this](const QVariant &) {
             // Update Monaco theme
             setTheme(QGuiApplication::styleHints()->colorScheme());
             // emit Monaco init is completed
@@ -70,8 +70,8 @@ void RavenMonacoPage::updateText(GitManager::GitDiffItem diffItem) {
     runJavaScript(QString("update({opt})").replace("{opt}", payloadJDStr));
 }
 
-void RavenMonacoPage::javaScriptConsoleMessage(JavaScriptConsoleMessageLevel level, const QString& message,
-                                               int lineNumber, const QString& sourceID) {
+void RavenMonacoPage::javaScriptConsoleMessage(JavaScriptConsoleMessageLevel level, const QString &message,
+                                               int lineNumber, const QString &sourceID) {
     qDebug() << "RavenMonacoPage::javaScriptConsoleMessage";
     qDebug() << level << message << lineNumber << sourceID;
 }

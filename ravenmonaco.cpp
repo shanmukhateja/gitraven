@@ -6,7 +6,7 @@
 
 namespace fs = std::filesystem;
 
-RavenMonaco::RavenMonaco(QWidget* parent) : QWebEngineView{parent}, m_page{new RavenMonacoPage(this)} {
+RavenMonaco::RavenMonaco(QWidget *parent) : QWebEngineView{parent}, m_page{new RavenMonacoPage(this)} {
     // Init page
     setPage(m_page);
 
@@ -15,7 +15,7 @@ RavenMonaco::RavenMonaco(QWidget* parent) : QWebEngineView{parent}, m_page{new R
     m_server->init();
 
     // Init bridge
-    m_bridge = new RavenMonacoBridge(this, (RavenEditor*)parent);
+    m_bridge = new RavenMonacoBridge(this, (RavenEditor *)parent);
     m_channel = new QWebChannel(this);
     m_page->setWebChannel(m_channel);
     m_channel->registerObject("cppBridge", m_bridge);
@@ -24,7 +24,7 @@ RavenMonaco::RavenMonaco(QWidget* parent) : QWebEngineView{parent}, m_page{new R
 
     // Light/dark theme switcher
     // FIXME: Can we move this to page instead?
-    QStyleHints* hint = QGuiApplication::styleHints();
+    QStyleHints *hint = QGuiApplication::styleHints();
     connect(hint, &QStyleHints::colorSchemeChanged, page(), &RavenMonacoPage::setTheme);
 }
 

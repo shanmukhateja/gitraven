@@ -6,7 +6,7 @@
 #include <QPushButton>
 #include <QVBoxLayout>
 
-RavenGitCheckoutDialog::RavenGitCheckoutDialog(GitManager* manager, QWidget* parent)
+RavenGitCheckoutDialog::RavenGitCheckoutDialog(GitManager *manager, QWidget *parent)
     : QDialog{parent}, mainLayout(new QVBoxLayout(this)), m_gitManager{manager},
       m_checkoutStatusLabel{new QLabel(this)}, m_list{new QListWidget(this)}, m_searchList{new QLineEdit(this)},
       m_checkoutButton(new QPushButton("Checkout", this)) {
@@ -51,9 +51,9 @@ RavenGitCheckoutDialog::RavenGitCheckoutDialog(GitManager* manager, QWidget* par
     connect(this, &RavenGitCheckoutDialog::signalOnBranchChangeRequested, this,
             &RavenGitCheckoutDialog::slotOnBranchChangeRequested);
 
-    connect(m_searchList, &QLineEdit::textChanged, this, [this](const QString& text) {
+    connect(m_searchList, &QLineEdit::textChanged, this, [this](const QString &text) {
         for (int i = 0; i < m_list->count(); i++) {
-            QListWidgetItem* item = m_list->item(i);
+            QListWidgetItem *item = m_list->item(i);
             bool match = item->text().contains(text, Qt::CaseInsensitive);
             item->setHidden(!match);
         }
@@ -103,7 +103,7 @@ void RavenGitCheckoutDialog::slotOnBranchChangeRequested() {
 }
 
 // Before closing the dialog, reset warning label
-void RavenGitCheckoutDialog::closeEvent(QCloseEvent* e) {
+void RavenGitCheckoutDialog::closeEvent(QCloseEvent *e) {
     this->resetCheckoutWarningLabel();
     QDialog::closeEvent(e);
 }

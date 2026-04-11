@@ -2,7 +2,7 @@
 #include "ravenmonacopage.h"
 #include "ravenutils.h"
 
-RavenEditor::RavenEditor(RavenStatusMessageDispatcher* statusMsgDispatcher, QWidget* parent)
+RavenEditor::RavenEditor(RavenStatusMessageDispatcher *statusMsgDispatcher, QWidget *parent)
     : QWidget{parent}, m_statusMsgDispatcher(statusMsgDispatcher) {}
 
 RavenEditor::~RavenEditor() {}
@@ -24,7 +24,7 @@ void RavenEditor::init() {
 }
 
 void RavenEditor::updateUI() {
-    auto* page = m_webEngineView->page();
+    auto *page = m_webEngineView->page();
 
     // Update text content
     page->updateText(m_diffItem);

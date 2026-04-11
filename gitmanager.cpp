@@ -6,7 +6,7 @@
 
 namespace fs = std::filesystem;
 
-GitManager::GitManager(QString dir, QObject* parent) : QObject{parent}, m_repoPath{dir} {
+GitManager::GitManager(QString dir, QObject *parent) : QObject{parent}, m_repoPath{dir} {
     Q_ASSERT(!m_repoPath.isEmpty());
 
     // Init Git library
@@ -15,7 +15,7 @@ GitManager::GitManager(QString dir, QObject* parent) : QObject{parent}, m_repoPa
     if (result != 0) {
         QString msgStr =
             QString("Failed to load Git repository at '%1', error: %2").arg(m_repoPath).arg(QString::number(result));
-        QMessageBox msg(QMessageBox::Critical, "GitRaven", msgStr, QMessageBox::Ok, (QWidget*)parent);
+        QMessageBox msg(QMessageBox::Critical, "GitRaven", msgStr, QMessageBox::Ok, (QWidget *)parent);
         msg.exec();
         std::exit(0);
     }
@@ -41,12 +41,12 @@ QList<GitManager::GitBranchSelectorItem> GitManager::getAllBranchesAndTags() {
 
     // Fetch all branches
     git_branch_t branchType{GIT_BRANCH_ALL};
-    git_branch_iterator* iter = nullptr;
+    git_branch_iterator *iter = nullptr;
     git_branch_iterator_new(&iter, m_repo, branchType);
-    git_reference* out = nullptr;
+    git_reference *out = nullptr;
     while (git_branch_next(&out, &branchType, iter) == 0) {
         // Get name
-        const char* bName = "";
+        const char *bName = "";
         git_branch_name(&bName, out);
         QString branchName = QString::fromUtf8(bName);
         git_reference_free(out);
@@ -74,7 +74,7 @@ QList<GitManager::GitBranchSelectorItem> GitManager::getAllBranchesAndTags() {
 
 void GitManager::statusAsync() {
     qDebug() << "GitManager::statusAsync() called";
-    RavenGitStatusThread* workerThread = new RavenGitStatusThread(this);
+    RavenGitStatusThread *workerThread = new RavenGitStatusThread(this);
     connect(workerThread, &RavenGitStatusThread::resultReady, this, &GitManager::statusChanged);
     connect(workerThread, &RavenGitStatusThread::finished, workerThread, &QObject::deleteLater);
     workerThread->start();
@@ -83,7 +83,7 @@ void GitManager::statusAsync() {
 GitManager::GitHEADStatus GitManager::findHEADStatus() {
     GitHEADStatus result = {};
 
-    git_reference* ref = nullptr;
+    git_reference *ref = nullptr;
     if (git_repository_head(&ref, m_repo) != 0) {
         // error
         // FIXME: Show error
@@ -106,7 +106,7 @@ GitManager::GitHEADStatus GitManager::findHEADStatus() {
     }
 
     // Find branch for HEAD
-    git_object* obj = nullptr;
+    git_object *obj = nullptr;
 
     // [COMMIT] Set commit hash as branchName
     if (git_reference_peel(&obj, ref, GIT_OBJECT_COMMIT) == 0) {
@@ -126,10 +126,10 @@ GitManager::GitHEADStatus GitManager::findHEADStatus() {
     // [TAG]    Locate commit by tag name
     // FIXME:   Show tag name instead of commit hash.
     if (git_reference_peel(&obj, ref, GIT_OBJECT_TAG) == 0) {
-        git_tag* tag = nullptr;
+        git_tag *tag = nullptr;
         const int error = git_tag_lookup(&tag, m_repo, git_object_id(obj));
         if (error == 0) {
-            const char* tagName = git_tag_name(tag);
+            const char *tagName = git_tag_name(tag);
             result.name = QString::fromStdString(tagName);
             result.type = GIT_HEAD_TYPE_TAG;
 
@@ -155,8 +155,8 @@ GitManager::GitHEADStatus GitManager::findHEADStatus() {
     return result;
 }
 
-GitManager::GitStageResponseCode GitManager::stageItem(RavenTreeItem* item) {
-    git_index* index = nullptr;
+GitManager::GitStageResponseCode GitManager::stageItem(RavenTreeItem *item) {
+    git_index *index = nullptr;
     int error = git_repository_index(&index, m_repo);
     if (error != 0) {
         qWarning() << "Failed to locate index in the repository.";
@@ -164,7 +164,7 @@ GitManager::GitStageResponseCode GitManager::stageItem(RavenTreeItem* item) {
     }
 
     auto pathStdString = item->relativePath.toStdString();
-    char* strings[] = {pathStdString.data()};
+    char *strings[] = {pathStdString.data()};
     git_strarray pathspec = {.count = 1};
     pathspec.strings = strings;
 
@@ -191,8 +191,8 @@ GitManager::GitStageResponseCode GitManager::stageItem(RavenTreeItem* item) {
     return GitStageResponseCode::DONE;
 }
 
-GitManager::GitStageResponseCode GitManager::unstageItem(RavenTreeItem* item) {
-    git_index* index = nullptr;
+GitManager::GitStageResponseCode GitManager::unstageItem(RavenTreeItem *item) {
+    git_index *index = nullptr;
 
     int error = git_repository_index(&index, m_repo);
 
@@ -203,13 +203,13 @@ GitManager::GitStageResponseCode GitManager::unstageItem(RavenTreeItem* item) {
 
     // Generate pathspec from treeItem
     auto pathStdString = item->relativePath.toStdString();
-    char* strings[] = {pathStdString.data()};
+    char *strings[] = {pathStdString.data()};
     git_strarray pathspec = {.count = 1};
     pathspec.strings = strings;
 
     // Find HEAD commit & reset the given file to it
-    git_reference* head = nullptr;
-    git_object* head_commit = nullptr;
+    git_reference *head = nullptr;
+    git_object *head_commit = nullptr;
     git_repository_head(&head, m_repo);
     git_reference_peel(&head_commit, head, GIT_OBJ_COMMIT);
 
@@ -239,7 +239,7 @@ GitManager::GitStageResponseCode GitManager::unstageItem(RavenTreeItem* item) {
     return GitStageResponseCode::DONE;
 }
 
-GitManager::GitDiffItem GitManager::diff(RavenTreeItem* item) {
+GitManager::GitDiffItem GitManager::diff(RavenTreeItem *item) {
     qDebug() << "GitManager::diff called";
 
     auto path = item->relativePath;
@@ -273,13 +273,13 @@ GitManager::GitDiffItem GitManager::diff(RavenTreeItem* item) {
     if (status == GIT_STATUS_INDEX_MODIFIED) {
         qDebug() << "(status == GIT_STATUS_INDEX_MODIFIED)";
 
-        git_object* obj = NULL;
+        git_object *obj = NULL;
         int error = git_revparse_single(&obj, repo, "HEAD^{tree}");
 
-        git_tree* tree = NULL;
+        git_tree *tree = NULL;
         error = git_tree_lookup(&tree, repo, git_object_id(obj));
 
-        git_diff* diff = NULL;
+        git_diff *diff = NULL;
         error = git_diff_tree_to_index(&diff, repo, tree, NULL, NULL);
 
         diff_data payload = {.reqFilePath = path};
@@ -312,13 +312,13 @@ GitManager::GitDiffItem GitManager::diff(RavenTreeItem* item) {
 
         qDebug() << "(GIT_STATUS_WT_MODIFIED)";
 
-        git_object* obj = NULL;
+        git_object *obj = NULL;
         int error = git_revparse_single(&obj, repo, "HEAD^{tree}");
 
-        git_tree* tree = NULL;
+        git_tree *tree = NULL;
         error = git_tree_lookup(&tree, repo, git_object_id(obj));
 
-        git_diff* diff = NULL;
+        git_diff *diff = NULL;
         error = git_diff_tree_to_workdir_with_index(&diff, repo, tree, NULL);
 
         diff_data payload = {.reqFilePath = path, .repoPath = m_repoPath};
@@ -361,7 +361,7 @@ GitManager::GitDiffItem GitManager::diff(RavenTreeItem* item) {
         // Show file contents from index.
         // Note: We do not have newFileContent as the file has been deleted.
 
-        git_diff* diff = NULL;
+        git_diff *diff = NULL;
         int error = git_diff_index_to_workdir(&diff, repo, NULL, NULL);
 
         diff_data payload = {.reqFilePath = path};
@@ -385,13 +385,13 @@ GitManager::GitDiffItem GitManager::diff(RavenTreeItem* item) {
 
         if (initiator == RavenTreeItem::STAGING) {
             // We need to pull HEAD to staging area changes
-            git_object* obj = NULL;
+            git_object *obj = NULL;
             int error = git_revparse_single(&obj, repo, "HEAD^{tree}");
 
-            git_tree* tree = NULL;
+            git_tree *tree = NULL;
             error = git_tree_lookup(&tree, repo, git_object_id(obj));
 
-            git_diff* diff = NULL;
+            git_diff *diff = NULL;
             error = git_diff_tree_to_index(&diff, repo, tree, NULL, NULL);
 
             diff_data payload = {.reqFilePath = path};
@@ -419,7 +419,7 @@ GitManager::GitDiffItem GitManager::diff(RavenTreeItem* item) {
         } else if (initiator == RavenTreeItem::UNCOMMITTED) {
             // Need to pull from staging area and working directory
 
-            git_diff* diff = NULL;
+            git_diff *diff = NULL;
             int error = git_diff_index_to_workdir(&diff, repo, NULL, {});
 
             qDebug() << "error=" << error;
@@ -453,13 +453,13 @@ GitManager::GitDiffItem GitManager::diff(RavenTreeItem* item) {
 
         if (initiator == RavenTreeItem::STAGING) {
             // We need to pull HEAD to staging area changes
-            git_object* obj = NULL;
+            git_object *obj = NULL;
             int error = git_revparse_single(&obj, repo, "HEAD^{tree}");
 
-            git_tree* tree = NULL;
+            git_tree *tree = NULL;
             error = git_tree_lookup(&tree, repo, git_object_id(obj));
 
-            git_diff* diff = NULL;
+            git_diff *diff = NULL;
             error = git_diff_tree_to_index(&diff, repo, tree, NULL, NULL);
 
             diff_data payload = {.reqFilePath = path};
@@ -502,13 +502,13 @@ GitManager::GitDiffItem GitManager::diff(RavenTreeItem* item) {
 
         if (initiator == RavenTreeItem::STAGING) {
             // We need to pull HEAD to staging area changes
-            git_object* obj = NULL;
+            git_object *obj = NULL;
             int error = git_revparse_single(&obj, repo, "HEAD^{tree}");
 
-            git_tree* tree = NULL;
+            git_tree *tree = NULL;
             error = git_tree_lookup(&tree, repo, git_object_id(obj));
 
-            git_diff* diff = NULL;
+            git_diff *diff = NULL;
             error = git_diff_tree_to_index(&diff, repo, tree, NULL, NULL);
 
             diff_data payload = {.reqFilePath = path};
@@ -536,7 +536,7 @@ GitManager::GitDiffItem GitManager::diff(RavenTreeItem* item) {
         } else if (initiator == RavenTreeItem::UNCOMMITTED) {
             // Need to pull from staging area and working directory
 
-            git_diff* diff = NULL;
+            git_diff *diff = NULL;
             int error = git_diff_index_to_workdir(&diff, repo, NULL, {});
 
             qDebug() << "error=" << error;
@@ -579,7 +579,7 @@ std::optional<GitManager::RavenFile> GitManager::getFileContent(git_oid oid) {
     GitManager::RavenFile ravenFile;
 
     // Find blob for given object id
-    git_blob* blob;
+    git_blob *blob;
     int result = git_blob_lookup(&blob, m_repo, &oid);
 
     if (result != 0) {
@@ -589,7 +589,7 @@ std::optional<GitManager::RavenFile> GitManager::getFileContent(git_oid oid) {
 
     // read file content
     int rawsize = static_cast<int>(git_blob_rawsize(blob));
-    const char* rawcontent = static_cast<const char*>(git_blob_rawcontent(blob));
+    const char *rawcontent = static_cast<const char *>(git_blob_rawcontent(blob));
 
     // return QString
     ravenFile.content = QString::fromUtf8(rawcontent, rawsize);
@@ -610,10 +610,10 @@ std::optional<GitManager::RavenFile> GitManager::getLocalFileContent(QString abs
     return std::nullopt;
 }
 
-int GitManager::each_file_cb(const git_diff_delta* delta, float progress, void* payload) {
+int GitManager::each_file_cb(const git_diff_delta *delta, float progress, void *payload) {
     qDebug() << "GitManager::each_file_cb called";
 
-    diff_data* d = (diff_data*)payload;
+    diff_data *d = (diff_data *)payload;
 
     auto newFile = delta->new_file;
     auto oldFile = delta->old_file;
@@ -654,7 +654,7 @@ QString GitManager::checkoutToRef(GitBranchSelectorItem item) {
     std::string refName = this->generateRefName(&item);
 
     int error = -999;
-    git_object* treeish = nullptr;
+    git_object *treeish = nullptr;
 
     error = git_revparse_single(&treeish, m_repo, refName.c_str());
     if (error != 0) {
@@ -665,10 +665,10 @@ QString GitManager::checkoutToRef(GitBranchSelectorItem item) {
     if (item.type == GIT_HEAD_TYPE_BRANCH) {
         // Check if local branch already exists
         std::string nameSlice = item.name.sliced(item.name.indexOf("/") + 1).toStdString();
-        const char* name = nameSlice.c_str();
+        const char *name = nameSlice.c_str();
         QString localBranchName = QString("refs/heads/%1").arg(name);
 
-        git_object* existsObj;
+        git_object *existsObj;
         int result = git_revparse_single(&existsObj, m_repo, localBranchName.toStdString().c_str());
         git_object_free(existsObj);
 
@@ -689,8 +689,8 @@ QString GitManager::checkoutToRef(GitBranchSelectorItem item) {
              * 2. update HEAD to branch
              * 3. Update local reference to branch ref in (1)
              */
-            git_reference* out = nullptr;
-            const auto* target = reinterpret_cast<git_commit*>(treeish);
+            git_reference *out = nullptr;
+            const auto *target = reinterpret_cast<git_commit *>(treeish);
             result = git_branch_create(&out, m_repo, name, target, 0);
             // qDebug() << result << getCheckoutErrorMessage();
             if (result == 0) {
@@ -750,7 +750,7 @@ QString GitManager::checkoutToRef(GitBranchSelectorItem item) {
     return getCheckoutErrorMessage();
 }
 
-std::string GitManager::generateRefName(GitManager::GitBranchSelectorItem* item) {
+std::string GitManager::generateRefName(GitManager::GitBranchSelectorItem *item) {
     qDebug() << "GitManager::generateRef called with item.name=" << item->name;
 
     QString result;
@@ -777,7 +777,7 @@ QString GitManager::getCheckoutErrorMessage() {
     return QString::fromStdString(errorObj->message);
 }
 
-int GitManager::each_binary_file_cb(const git_diff_delta* delta, const git_diff_binary* binary, void* payload) {
+int GitManager::each_binary_file_cb(const git_diff_delta *delta, const git_diff_binary *binary, void *payload) {
     qDebug() << "GitManager::each_binary_file_cb called";
     return 0;
 }
@@ -791,15 +791,15 @@ QString GitManager::oid_to_str(git_oid oid) {
 int GitManager::commit(QList<QString> items, QString msg, bool amend) {
     qDebug() << "GitManager::commit called";
 
-    git_index* index = nullptr;
-    git_object* parent = nullptr;
-    git_reference* ref = nullptr;
-    git_signature* committer = nullptr;
+    git_index *index = nullptr;
+    git_object *parent = nullptr;
+    git_reference *ref = nullptr;
+    git_signature *committer = nullptr;
     git_oid tree_oid;
     git_oid commit_oid;
-    git_tree* tree = nullptr;
+    git_tree *tree = nullptr;
     // amend
-    git_commit* amendCommit = nullptr;
+    git_commit *amendCommit = nullptr;
 
     int error = git_revparse_ext(&parent, &ref, m_repo, "HEAD");
     if (error != 0) {
@@ -815,7 +815,7 @@ int GitManager::commit(QList<QString> items, QString msg, bool amend) {
 
     git_strarray pathspec = {};
     auto size = items.size();
-    pathspec.strings = new char*[size + 1];
+    pathspec.strings = new char *[size + 1];
     pathspec.count = items.count();
     for (int i = 0; i < size; ++i) {
         pathspec.strings[i] = strdup(items[i].toStdString().c_str());
