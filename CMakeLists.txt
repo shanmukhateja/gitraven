@@ -101,6 +101,8 @@ qt_add_executable(gitraven-qt
 #    target_link_libraries(gitraven-qt PRIVATE -fsanitize=address)
 #endif()
 
+# Uncomment for profiling app. (callgrind)
+# set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
 
 target_link_libraries(gitraven-qt PRIVATE Qt6::Widgets)
 target_link_libraries(gitraven-qt PRIVATE Qt6::Core)
