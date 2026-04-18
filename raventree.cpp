@@ -189,7 +189,7 @@ void RavenTree::_buildTree(RavenTreeBuildHelper &helper) {
 
         // Goal: Find parent node
 
-        auto it = RavenTreeModel::findNodeByAbsPathAndInitiator(currentNode, currentPathStr, currentNode->initiator);
+        auto it = RavenTreeModel::findNodeByRelPathAndInitiator(currentNode, currentPathStr, currentNode->initiator);
 
         // Node not found in tree, create new node
         if (!it) {

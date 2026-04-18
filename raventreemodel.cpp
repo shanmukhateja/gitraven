@@ -144,6 +144,25 @@ RavenTreeItem *RavenTreeModel::findParentNodeByAbsPathAndInitiator(RavenTreeItem
     return parentNode;
 }
 
+RavenTreeItem *RavenTreeModel::findNodeByRelPathAndInitiator(RavenTreeItem *root, const QString &relativePath,
+                                                             const RavenTreeItem::RavenTreeCategory initiator) {
+    RavenTreeItem *reqNode = nullptr;
+    for (RavenTreeItem *node : root->children) {
+        // We need to find required node by path AND by RavenTreeCategory.
+        if (node->relativePath == relativePath && (node->initiator == initiator)) {
+            reqNode = node;
+            break;
+        }
+
+        reqNode = RavenTreeModel::findNodeByRelPathAndInitiator(node, relativePath, initiator);
+
+        if (reqNode)
+            break;
+    }
+
+    return reqNode;
+}
+
 RavenTreeItem *RavenTreeModel::findNodeByAbsPathAndInitiator(RavenTreeItem *root, const QString &absolutePath,
                                                              const RavenTreeItem::RavenTreeCategory initiator) {
     RavenTreeItem *reqNode = nullptr;
