@@ -9,6 +9,8 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+option(GITRAVEN_ENABLE_TESTING "Enable testing" ON)
+
 # Define preprocessor macros for build types
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_definitions(-DBUILD_TYPE_DEBUG)
@@ -33,6 +35,10 @@ find_package(Qt6 REQUIRED COMPONENTS Widgets Core HttpServer WebEngineCore WebEn
 find_package(libgit2 REQUIRED)
 
 add_subdirectory(src)
+if (GITRAVEN_ENABLE_TESTING)
+    enable_testing()
+    add_subdirectory(tests)
+endif ()
 
 # main executable
 qt_add_executable(gitraven_qt src/main.cpp)
