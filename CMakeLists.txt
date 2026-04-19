@@ -49,13 +49,6 @@ target_include_directories(gitraven_qt PUBLIC ${CMAKE_SOURCE_DIR}/include)
 # Link to gitraven_core
 target_link_libraries(gitraven_qt PRIVATE gitraven_core)
 
-
-# Copy monaco editor to build directory
-add_custom_target(copy_assets ALL
-    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/editor ${CMAKE_BINARY_DIR}/editor
-    COMMENT "Copying Monaco editor assets to build directory"
-)
-
 install(TARGETS gitraven_qt
     BUNDLE DESTINATION .
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
@@ -63,9 +56,10 @@ install(TARGETS gitraven_qt
 )
 
 # Copy editor directory
+# Note: We use `${PROJECT_NAME}-qt` here to match app name declared in main.cpp
 install(
-    DIRECTORY   editor
-    DESTINATION  ${CMAKE_INSTALL_DATAROOTDIR}/${PROJECT_NAME}
+    DIRECTORY   resources/editor
+    DESTINATION  ${CMAKE_INSTALL_DATAROOTDIR}/${PROJECT_NAME}-qt/resources
 )
 
 # Copy .desktop file

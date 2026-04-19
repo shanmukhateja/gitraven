@@ -2,7 +2,7 @@ build/
 CMakeLists.txt.user
 
 # Monaco
-editor/node_modules
+resources/editor/node_modules
 
 # CLion
 # Ignore personal workspace & IDE settings
