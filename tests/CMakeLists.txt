@@ -1,7 +1,10 @@
 cmake_minimum_required(VERSION 3.16)
 
 qt_add_executable(gitraven_tests
-        test_gitmanager.cpp
+        mockgitmanager.cpp
+        mockgitmanager.h
+        test_raventree.cpp
+        test_raventree.h
 )
 
 target_include_directories(gitraven_tests PUBLIC

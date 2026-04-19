@@ -9,25 +9,24 @@
 
 class RavenLHSView;
 
-class RavenTree : public QTreeView
-{
+class RavenTree : public QTreeView {
     Q_OBJECT
-public:
+  public:
     explicit RavenTree(QWidget *parent = nullptr);
 
     [[nodiscard]] RavenTreeModel *model() const;
     int getMaxStatusFilesCount() { return MAX_STATUS_FILES_COUNT; }
-signals:
+  signals:
     void renderDiffItem(GitManager::GitDiffItem item);
 
-public slots:
+  public slots:
     void buildTree(QString repoPath, GitManager::status_data payload);
     void onFileOpened(const QModelIndex &index);
 
-private:
+  private:
     RavenTreeModel *m_model;
     RavenLHSView *m_lhsView;
-    GitManager *m_gitManager;
+    GitManagerBase *m_gitManager;
 
     bool maxStatusFilesCountReached = false;
     int MAX_STATUS_FILES_COUNT = 500;
@@ -46,18 +45,18 @@ private:
 
         GitManager::GitStatusItem status;
     };
-    void _buildTree(RavenTreeBuildHelper& helper);
+    void _buildTree(RavenTreeBuildHelper &helper);
 
     void initCustomActions();
-    void buildContextMenuForTreeItem(RavenTreeItem* treeItem);
+    void buildContextMenuForTreeItem(RavenTreeItem *treeItem);
     void OnContextMenuRequested(const QPoint &pos);
 
     QMenu *m_contextMenu;
-    QAction* m_deleteAction;
-    QAction* m_stageAction;
-    QAction* m_unstageAction;
-    QAction* m_openNodeInFMAction;
-    QList<QAction*> m_contextMenuActionsList;
+    QAction *m_deleteAction;
+    QAction *m_stageAction;
+    QAction *m_unstageAction;
+    QAction *m_openNodeInFMAction;
+    QList<QAction *> m_contextMenuActionsList;
 };
 
 #endif // RAVENTREE_H

@@ -13,7 +13,9 @@ class GitManagerBase : public QObject {
     Q_OBJECT
   public:
     explicit GitManagerBase(QObject *parent = nullptr, QString repoPath = nullptr)
-        : QObject(parent), m_repoPath(repoPath) {}
+        : QObject(parent), m_repoPath(repoPath) {
+        setParent(parent);
+    }
     virtual ~GitManagerBase() {}
 
     virtual int init() { return 0; }
