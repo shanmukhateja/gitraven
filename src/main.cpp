@@ -32,7 +32,7 @@ int main(int argc, char *argv[]) {
     // Git init
     // GitManager will be owned by `app`.
     // This way, MainWindow and it's widgets can acquire it via `qApp`
-    auto *manager = new GitManager(gitRepoPath.value(), &app);
+    new GitManager(&app, gitRepoPath.value());
 
     // MainWindow
     MainWindow w;

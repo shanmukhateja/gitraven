@@ -1,105 +1,36 @@
 #ifndef GITMANAGER_H
 #define GITMANAGER_H
 
+#include "gitmanagerbase.h"
 #include "raventreeitem.h"
 
 #include <QObject>
 
 #include <git2.h>
 
-class GitManager: public QObject
-{
+class GitManager : public GitManagerBase {
     Q_OBJECT
-public:
-    enum GitHEADStatusType {
-        GIT_HEAD_TYPE_COMMIT = 1,
-        GIT_HEAD_TYPE_BRANCH = 2,
-        GIT_HEAD_TYPE_TAG = 3
-    };
-    struct GitBranchSelectorItem {
-        GitHEADStatusType type;
-        QString name;
-        bool isRemote;
-    };
-
-    struct GitHEADStatus {
-        QString name;
-        GitHEADStatusType type;
-    };
-    struct GitStatusItem {
-        QString path;
-        git_status_t flag;
-        RavenTreeItem::RavenTreeCategory category;
-        bool deleted;
-    };
-
-    // Struct to send/receive data between `status()` and `status_cb()`
-    typedef struct status_data {
-        QList<GitStatusItem> statusItems;
-    } status_data;
-
-
-    struct GitDiffItem {
-        git_oid oldOid;
-        QString oldFilePath;
-        QString oldFileContent;
-
-        git_oid newOid;
-        QString newFilePath;
-        QString newFileContent;
-
-        bool binary;
-
-        RavenTreeItem::RavenTreeCategory category;
-    };
-
-    enum GitStageResponseCode {
-        INDEX_NOT_FOUND,
-        NOT_IN_INDEX,
-        IS_CONFLICT,
-        FAILED_TO_INDEX,
-        FAILED_TO_UNSTAGE,
-        FAILED_WRITE_INDEX_TO_DISK,
-        UNKNOWN,
-        DONE
-    };
-
-    explicit GitManager(QString dir, QObject *parent = nullptr);
-    ~GitManager();
+  public:
+    explicit GitManager(QObject *parent = nullptr, QString repoPath = nullptr);
+    ~GitManager() override;
 
     // FIXME: This looks unsafe.
-    git_repository *getRepo() {return m_repo;}
-    QString getRepoPath() {return m_repoPath;}
+    git_repository *getRepo() { return m_repo; }
+    QString getRepoPath() { return m_repoPath; }
     void statusAsync();
-    GitManager::GitHEADStatus findHEADStatus();
+    GitHEADStatus findHEADStatus();
     GitDiffItem diff(RavenTreeItem *item);
     GitStageResponseCode stageItem(RavenTreeItem *item);
     GitStageResponseCode unstageItem(RavenTreeItem *item);
     int commit(QList<QString> items, QString msg, bool amend);
-    QList<GitManager::GitBranchSelectorItem> getAllBranchesAndTags();
-    /**
-     * @brief GitManager::checkoutToRef
-     * Checkout in `libgit2` doesn't switch branch, it simply checks files out on disk.
-     * Hence, we must call `git_repository_set_head` on success.
-     * More info: https://stackoverflow.com/a/46758861
-     * @param item The payload contains data used to checkout to ref (branch/tag)
-     * @return `nullptr` on success or QString with error message.
-     */
+    QList<GitBranchSelectorItem> getAllBranchesAndTags();
     QString checkoutToRef(GitBranchSelectorItem item);
 
-signals:
-    void statusChanged(GitManager::status_data payload);
-
-private:
     git_repository *m_repo = nullptr;
     QString m_repoPath = nullptr;
 
-    struct RavenFile {
-        QString content;
-        bool binary;
-    };
-    std::optional<RavenFile> getFileContent(git_oid oid);
-    std::optional<RavenFile> getLocalFileContent(QString absPath);
+    std::optional<FileItem> getFileContent(git_oid oid) override;
+    std::optional<FileItem> getLocalFileContent(const QString &absPath);
 
     typedef struct diff_data {
         git_oid old_oid;
@@ -119,18 +50,13 @@ private:
     // This MUST be called in constructor only.
     int init();
 
-    static int each_file_cb(const git_diff_delta *delta,
-                     float progress,
-                     void *payload);
-    static int each_binary_file_cb(const git_diff_delta *delta,
-                                   const git_diff_binary *binary,
-                                   void *payload);
+    static int each_file_cb(const git_diff_delta *delta, float progress, void *payload);
+    static int each_binary_file_cb(const git_diff_delta *delta, const git_diff_binary *binary, void *payload);
 
     QString oid_to_str(git_oid oid);
 
     QString getCheckoutErrorMessage();
     std::string generateRefName(GitManager::GitBranchSelectorItem *item);
 };
-
 
 #endif // GITMANAGER_H

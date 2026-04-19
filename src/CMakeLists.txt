@@ -40,6 +40,7 @@ qt_add_library(gitraven_core
         ${CMAKE_SOURCE_DIR}/include/ravengitcheckoutdialog.h
         ${CMAKE_SOURCE_DIR}/include/ravenstatusmessagedispatcher.h
         ${CMAKE_SOURCE_DIR}/include/ravengitstatusthread.h
+        ${CMAKE_SOURCE_DIR}/include/gitmanagerbase.h
 )
 
 # Include own headers

@@ -6,7 +6,7 @@
 
 namespace fs = std::filesystem;
 
-GitManager::GitManager(QString dir, QObject *parent) : QObject{parent}, m_repoPath{dir} {
+GitManager::GitManager(QObject *parent, QString dir) : GitManagerBase(parent), m_repoPath(std::move(dir)) {
     Q_ASSERT(!m_repoPath.isEmpty());
 
     // Init Git library
@@ -29,7 +29,7 @@ GitManager::~GitManager() {
 
 int GitManager::init() {
     // Prepare dir path
-    auto path = m_repoPath.toStdString();
+    const auto path = m_repoPath.toStdString();
 
     // Open repository
     return git_repository_open(&m_repo, path.c_str());
@@ -573,10 +573,8 @@ GitManager::GitDiffItem GitManager::diff(RavenTreeItem *item) {
     return diffItem;
 }
 
-std::optional<GitManager::RavenFile> GitManager::getFileContent(git_oid oid) {
+std::optional<GitManagerBase::FileItem> GitManager::getFileContent(git_oid oid) {
     qDebug() << "GitManager::getFileContent called";
-
-    GitManager::RavenFile ravenFile;
 
     // Find blob for given object id
     git_blob *blob;
@@ -591,20 +589,19 @@ std::optional<GitManager::RavenFile> GitManager::getFileContent(git_oid oid) {
     int rawsize = static_cast<int>(git_blob_rawsize(blob));
     const char *rawcontent = static_cast<const char *>(git_blob_rawcontent(blob));
 
-    // return QString
-    ravenFile.content = QString::fromUtf8(rawcontent, rawsize);
-    ravenFile.binary = git_blob_is_binary(blob);
+    FileItem fileItem;
+    fileItem.content = QString::fromUtf8(rawcontent, rawsize);
+    fileItem.binary = git_blob_is_binary(blob);
 
-    return ravenFile;
+    return fileItem;
 }
 
-std::optional<GitManager::RavenFile> GitManager::getLocalFileContent(QString absPath) {
-    RavenFile ravenFile;
-
-    QFile file = QFile(absPath);
-    if (file.open(QIODevice::ReadOnly)) {
-        ravenFile.content = QString::fromStdString(file.readAll().toStdString());
-        return ravenFile;
+std::optional<GitManagerBase::FileItem> GitManager::getLocalFileContent(const QString &absPath) {
+    if (QFile file = QFile(absPath); file.open(QIODevice::ReadOnly)) {
+        FileItem fileItem;
+        fileItem.content = QString::fromStdString(file.readAll().toStdString());
+        fileItem.binary = false;
+        return fileItem;
     }
 
     return std::nullopt;
