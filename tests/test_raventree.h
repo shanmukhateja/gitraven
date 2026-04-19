@@ -18,8 +18,29 @@ class RavenTreeTest : public QObject {
     void emitStatusChangedForPayload(GitManager::status_data) const;
 
     void buildTreeUncommittedNodes() const;
+    void buildTreeStagingNodes() const;
 
-    void cleanupTestCase() const;
+    void buildTreeDuplicatePaths() const;
+
+    void buildTreeSiblingFiles() const;
+
+    void buildTreeMixedDepth() const;
+
+    void buildTreeSamePathMultipleStatuses() const;
+
+    void buildTreeSharedDirectories() const;
+
+    void buildTreeDeletedItems() const;
+
+    void buildTreeModifiedInBoth() const;
+
+    void treeStagingOnly() const;
+
+    void buildTreeMixedCategoriesSameDir() const;
+
+    void buildTreePathNormalization() const;
+
+    void cleanupTestCase();
 };
 
 #endif // GITRAVEN_TEST_RAVENTREE_H
