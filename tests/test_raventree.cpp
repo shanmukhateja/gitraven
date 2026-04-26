@@ -245,5 +245,3 @@ void RavenTreeTest::cleanupTestCase() {
     m_gitManager = nullptr;
     m_tree = nullptr;
 }
-
-QTEST_MAIN(RavenTreeTest)

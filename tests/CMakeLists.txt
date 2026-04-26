@@ -5,6 +5,7 @@ qt_add_executable(gitraven_tests
         mockgitmanager.h
         test_raventree.cpp
         test_raventree.h
+        main.cpp
 )
 
 target_include_directories(gitraven_tests PUBLIC
