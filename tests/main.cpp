@@ -1,5 +1,6 @@
 #include <QtTest>
 
+#include "test_gitmanager.h"
 #include "test_raventree.h"
 
 int main(int argc, char *argv[]) {
@@ -9,6 +10,11 @@ int main(int argc, char *argv[]) {
 
     {
         RavenTreeTest tc;
+        status |= QTest::qExec(&tc, argc, argv);
+    }
+
+    {
+        GitManagerTests tc;
         status |= QTest::qExec(&tc, argc, argv);
     }
 

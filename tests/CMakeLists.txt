@@ -5,6 +5,10 @@ qt_add_executable(gitraven_tests
         mockgitmanager.h
         test_raventree.cpp
         test_raventree.h
+        test_gitmanager.cpp
+        test_gitmanager.h
+        gitbinaryrunner.cpp
+        gitbinaryrunner.h
         main.cpp
 )
 
