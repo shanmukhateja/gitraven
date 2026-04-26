@@ -257,8 +257,10 @@ GitManager::GitDiffItem GitManager::diff(RavenTreeItem *item) {
     }
 
     // New file has been added to index/working directory & it's first time we're seeing it.
-    if (status == GIT_STATUS_INDEX_NEW || status == GIT_STATUS_WT_NEW) {
-        qDebug() << "(status == GIT_STATUS_INDEX_NEW || status == GIT_STATUS_WT_NEW)";
+    // Note: When we create a new git repo which does not have any commits,
+    //       all files are treated as `GIT_STATUS_CURRENT` by libgit2.
+    if (status == GIT_STATUS_INDEX_NEW || status == GIT_STATUS_WT_NEW || status == GIT_STATUS_CURRENT) {
+        qDebug() << "(status == GIT_STATUS_INDEX_NEW || status == GIT_STATUS_WT_NEW || status == GIT_STATUS_CURRENT)";
 
         auto fileContent = getLocalFileContent(absPath);
         if (fileContent.has_value()) {
