@@ -13,7 +13,6 @@ class GitManagerTests : public QObject {
   private slots:
     // run init code here
     void initTestCase();
-    void emitStatusChangedForPayload(GitManagerBase::status_data payload) const;
 
     // test cases go here
     void testEmptyRepoNewFileDiffHasNoDiff() const;

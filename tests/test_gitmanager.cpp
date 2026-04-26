@@ -16,13 +16,6 @@ void GitManagerTests::initTestCase() {
     m_gitManager = new GitManager(qApp, getRepoPath());
 }
 
-void GitManagerTests::emitStatusChangedForPayload(GitManagerBase::status_data payload) const {
-    const QSignalSpy spy{m_gitManager, &GitManagerBase::statusChanged};
-    emit m_gitManager->statusChanged(std::move(payload));
-
-    QCOMPARE(spy.count(), 1);
-}
-
 /// add test cases below
 
 void GitManagerTests::testEmptyRepoNewFileDiffHasNoDiff() const {
