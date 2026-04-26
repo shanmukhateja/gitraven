@@ -16,6 +16,7 @@ class GitManagerTests : public QObject {
     void emitStatusChangedForPayload(GitManagerBase::status_data payload) const;
 
     // test cases go here
+    void testEmptyRepoNewFileDiffHasNoDiff() const;
 
     // run teardown/cleanup code here
     void cleanupTestCase() const;
