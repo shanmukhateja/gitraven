@@ -17,6 +17,9 @@ class GitManagerTests : public QObject {
 
     // test cases go here
     void testEmptyRepoNewFileDiffHasNoDiff() const;
+    void testCommitAFile() const;
+
+    void testAmendCommitAFile() const;
 
     // run teardown/cleanup code here
     void cleanupTestCase() const;

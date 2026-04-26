@@ -34,12 +34,69 @@ void GitManagerTests::testEmptyRepoNewFileDiffHasNoDiff() const {
     treeItem->absolutePath = getRepoPath() + "/" + treeItem->relativePath;
     treeItem->binary = false;
 
-    auto createFileResult = GitBinaryRunner::createFilesForPath(treeItem->absolutePath, "bbb");
+    const auto createFileResult = GitBinaryRunner::createFilesForPath(treeItem->absolutePath, "bbb");
     QCOMPARE(createFileResult, true);
 
-    auto result = m_gitManager->diff(treeItem);
+    const auto result = m_gitManager->diff(treeItem);
     QCOMPARE(result.oldFileContent, "");
     QCOMPARE(result.newFileContent, "bbb");
+}
+
+void GitManagerTests::testCommitAFile() const {
+    QCOMPARE(cleanupBeforeTestCase(), true);
+
+    const QString fileName = "a.txt";
+    const QString absolutePath = getRepoPath() + "/" + fileName;
+    const QString commitMsg = QString("feat: add file '%1'").arg(fileName);
+    const QString fileContent = "bbb";
+
+    const auto treeItem = new RavenTreeItem();
+    treeItem->relativePath = fileName;
+    treeItem->name = fileName;
+    treeItem->absolutePath = absolutePath;
+    treeItem->binary = false;
+
+    const auto createFileResult = GitBinaryRunner::createFilesForPath(treeItem->absolutePath, fileContent);
+    QCOMPARE(createFileResult, true);
+
+    const auto result = m_gitManager->commit({fileName}, commitMsg, false);
+    QCOMPARE(result, 0);
+
+    // Use git binary to fetch just the commit log
+    const auto out = m_gitBinaryRunner->runGitCommandForOutput({"log", "--format=%B"});
+    QCOMPARE(out.trimmed(), commitMsg);
+}
+
+void GitManagerTests::testAmendCommitAFile() const {
+    QCOMPARE(cleanupBeforeTestCase(), true);
+
+    const QString fileName = "a.txt";
+    const QString absolutePath = getRepoPath() + "/" + fileName;
+    const QString commitMsg = QString("feat: add file '%1'").arg(fileName);
+    const QString commitMsgAmend = commitMsg + "_amend";
+    const QString fileContent = "bbb";
+    const QStringList gitLogCommand = {"log", "--format=%B"};
+
+    const auto treeItem = new RavenTreeItem();
+    treeItem->relativePath = fileName;
+    treeItem->name = fileName;
+    treeItem->absolutePath = absolutePath;
+    treeItem->binary = false;
+
+    const auto createFileResult = GitBinaryRunner::createFilesForPath(treeItem->absolutePath, fileContent);
+    QCOMPARE(createFileResult, true);
+
+    auto result = m_gitManager->commit({fileName}, commitMsg, false);
+    QCOMPARE(result, 0);
+
+    auto out = m_gitBinaryRunner->runGitCommandForOutput(gitLogCommand);
+    QCOMPARE(out.trimmed(), commitMsg);
+
+    result = m_gitManager->commit({fileName}, commitMsgAmend, true);
+    QCOMPARE(result, 0);
+
+    out = m_gitBinaryRunner->runGitCommandForOutput(gitLogCommand);
+    QCOMPARE(out.trimmed(), commitMsgAmend);
 }
 
 /// test cases end

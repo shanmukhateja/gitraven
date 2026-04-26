@@ -80,8 +80,10 @@ bool GitBinaryRunner::runGitCommand(const QStringList &arguments = {}) {
 
 QString GitBinaryRunner::runGitCommandForOutput(const QStringList &arguments = {}) {
     QProcess gitBinary(this);
+    gitBinary.setWorkingDirectory(GIT_REPO_PATH);
     gitBinary.start(GIT_BINARY_PATH, arguments);
-    QString out = gitBinary.readAll();
+    gitBinary.setReadChannel(QProcess::StandardOutput);
     gitBinary.waitForFinished(4000);
+    QString out = gitBinary.readAllStandardOutput();
     return out;
 }

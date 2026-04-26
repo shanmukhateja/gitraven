@@ -802,8 +802,7 @@ int GitManager::commit(QList<QString> items, QString msg, bool amend) {
 
     int error = git_revparse_ext(&parent, &ref, m_repo, "HEAD");
     if (error != 0) {
-        qCritical() << "Unable to find HEAD in the repository.";
-        return error;
+        qInfo() << "HEAD commit doesn't exist in repo";
     }
 
     error = git_repository_index(&index, m_repo);
