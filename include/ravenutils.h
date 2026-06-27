@@ -3,46 +3,46 @@
 
 #include "ravenfile.h"
 
-#include <QObject>
-#include <QFile>
-#include <QTextStream>
 #include <QByteArray>
-#include <QDebug>
-#include <QStandardPaths>
-#include <QDir>
 #include <QCoreApplication>
+#include <QDebug>
+#include <QDir>
+#include <QFile>
+#include <QObject>
 #include <QProcess>
+#include <QStandardPaths>
+#include <QTextStream>
 
 #include <algorithm>
 
-class RavenUtils: public QObject
-{
-public:
-
+class RavenUtils : public QObject {
+  public:
     // FIXME: This code needs to be moved to a separate file.
     static std::optional<QStringConverter::Encoding> detectTextEncoding(QByteArray bytes) {
         // BOM detection is supported by Qt
         std::optional<QStringConverter::Encoding> encoding = QStringConverter::encodingForData(bytes);
-        if (encoding.has_value()) return encoding.value();
+        if (encoding.has_value())
+            return encoding.value();
 
         // We do not support binary files.
         if (bytes.size() >= 2) {
             bool isBinary = (bytes.slice(0, 2) == QByteArray(0x00));
-            if (isBinary) return std::nullopt;
+            if (isBinary)
+                return std::nullopt;
         }
 
         // Check with libmagic
         // FIXME: Need to merge multiple encoding detection logic
         RavenFile f;
         auto enc = f.detectEncodingByBuffer(bytes);
-        if (enc.has_value()) return enc.value();
+        if (enc.has_value())
+            return enc.value();
 
         // Default value
         return QStringConverter::Utf8;
     }
 
-    static bool saveFile(QString absPath, QString text)
-    {
+    static bool saveFile(QString absPath, QString text) {
         qDebug() << "RavenUtils::saveFile called";
         std::optional<QStringConverter::Encoding> encoding;
 
@@ -84,11 +84,11 @@ public:
         return false;
     }
 
-    static bool deleteFile(QString absPath)
-    {
+    static bool deleteFile(QString absPath) {
         try {
             auto isDirectory = std::filesystem::is_directory(absPath.toStdString());
-            if (isDirectory) return std::filesystem::remove_all(absPath.toStdString());
+            if (isDirectory)
+                return std::filesystem::remove_all(absPath.toStdString());
 
             return std::filesystem::remove(absPath.toStdString());
         } catch (...) {
@@ -99,24 +99,28 @@ public:
 
     static std::optional<QStringConverter::Encoding> getQStringConvEncodingForLibMagicName(const char *name) {
 
-        if (strcmp(name,"us-ascii") == 0) return QStringConverter::Encoding::Utf8;
+        if (strcmp(name, "us-ascii") == 0)
+            return QStringConverter::Encoding::Utf8;
 
-        if (strcmp(name, "utf-16le") == 0) return QStringConverter::Encoding::Utf16LE;
-        if (strcmp(name, "utf-16be") == 0) return QStringConverter::Encoding::Utf16BE;
+        if (strcmp(name, "utf-16le") == 0)
+            return QStringConverter::Encoding::Utf16LE;
+        if (strcmp(name, "utf-16be") == 0)
+            return QStringConverter::Encoding::Utf16BE;
 
         return std::nullopt;
     }
 
     static std::filesystem::path getEditorDirPath() {
         QDir editorDir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation)
-                           .append(QDir::separator())
-                           .append("editor");
+                             .append(QDir::separator())
+                             .append("resources")
+                             .append(QDir::separator())
+                             .append("editor");
         return editorDir.filesystemAbsolutePath();
     }
 
     // https://forum.qt.io/topic/60226/how-to-open-directory-in-file-manager-and-highlight-specific-item-in-it/9?_=1773067256134
-    static void openNodeInFM(QString absPath)
-    {
+    static void openNodeInFM(QString absPath) {
         QProcess proc;
         QString output;
         proc.start("xdg-mime", QStringList() << "query" << "default" << "inode/directory");
@@ -124,8 +128,8 @@ public:
         output = proc.readLine().simplified();
         if (output == "dolphin.desktop" || output == "org.kde.dolphin.desktop")
             proc.startDetached("dolphin", QStringList() << "--select" << absPath);
-        else if (output == "nautilus.desktop" || output == "org.gnome.Nautilus.desktop"
-                 || output == "nautilus-folder-handler.desktop")
+        else if (output == "nautilus.desktop" || output == "org.gnome.Nautilus.desktop" ||
+                 output == "nautilus-folder-handler.desktop")
             proc.startDetached("nautilus", QStringList() << "--no-desktop" << absPath);
         else if (output == "caja-folder-handler.desktop")
             proc.startDetached("caja", QStringList() << "--no-desktop" << absPath);

@@ -2,7 +2,7 @@ build/
 CMakeLists.txt.user
 
 # Monaco
-editor/node_modules
+resources/editor/node_modules
 
 # CLion
 # Ignore personal workspace & IDE settings
@@ -11,6 +11,7 @@ editor/node_modules
 .idea/misc.xml
 .idea/QtSettings.xml
 .idea/vcs.xml
+.idea/shelf
 
 # Keep inspection profiles for team consistency
 !.idea/inspectionProfiles/

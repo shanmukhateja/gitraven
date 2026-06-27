@@ -8,15 +8,18 @@ class RavenTreeItem : public QObject {
     Q_OBJECT
   public:
     enum RavenTreeCategory { STAGING, UNCOMMITTED, BOTH };
+    enum TreeItemType { FOLDER, FILE };
 
-    explicit RavenTreeItem(QObject* parent = nullptr);
+    explicit RavenTreeItem(QObject *parent = nullptr);
     ~RavenTreeItem() override;
 
     QString name;
     QString relativePath;
     QString absolutePath;
     bool binary;
-    QList<RavenTreeItem*> children;
+    QList<RavenTreeItem *> children;
+    // Used by UI for determining given node is a folder (0) or file (1)
+    [[nodiscard]] auto type() const -> TreeItemType { return children.isEmpty() ? FILE : FOLDER; }
     git_status_t flag;
     // Used by UI for determining which category tree we belong to.
     RavenTreeCategory initiator;

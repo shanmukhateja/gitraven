@@ -16,7 +16,7 @@ namespace fs = std::filesystem;
 
 RavenTree::RavenTree(QWidget *parent)
     : QTreeView{parent}, m_model(new RavenTreeModel(this)), m_contextMenu{new QMenu(this)} {
-    m_gitManager = qApp->findChild<GitManager *>();
+    m_gitManager = qApp->findChild<GitManagerBase *>();
     m_lhsView = dynamic_cast<RavenLHSView *>(parent);
 
     // Update tree when Git status changes
