@@ -26,9 +26,6 @@ class GitManager : public GitManagerBase {
     QList<GitBranchSelectorItem> getAllBranchesAndTags();
     QString checkoutToRef(GitBranchSelectorItem item);
 
-    git_repository *m_repo = nullptr;
-    QString m_repoPath = nullptr;
-
     std::optional<FileItem> getFileContent(git_oid oid) override;
     std::optional<FileItem> getLocalFileContent(const QString &absPath);
 

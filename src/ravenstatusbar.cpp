@@ -24,7 +24,10 @@ RavenStatusBar::RavenStatusBar(QWidget *parent) : QStatusBar{parent} {
 
 void RavenStatusBar::onHEADStatusButtonClicked() {
     qDebug() << "RavenStatusBar::onHEADStatusButtonClicked called";
-    emit m_gitCheckoutDialog->signalOnBranchChangeRequested();
+    // Do not show branch change dialog when HEAD doesn't exist.
+    auto headStatus = m_gitManager->findHEADStatus();
+    if (headStatus.type != 0)
+        emit m_gitCheckoutDialog->signalOnBranchChangeRequested();
 }
 
 void RavenStatusBar::slotHEADChange(GitManager::GitHEADStatus status) {
@@ -37,7 +40,6 @@ void RavenStatusBar::slotHEADChange(GitManager::GitHEADStatus status) {
     // Ellipses affect on name.
     QFontMetrics fm(m_headStatusButton->font());
 
-    Q_ASSERT(!status.name.isEmpty());
     switch (status.type) {
     case GitManager::GIT_HEAD_TYPE_COMMIT:
         width = m_headStatusButton->width() / 0.6;
@@ -51,6 +53,10 @@ void RavenStatusBar::slotHEADChange(GitManager::GitHEADStatus status) {
     case GitManager::GIT_HEAD_TYPE_TAG:
         name = status.name;
         icon = QIcon::fromTheme("tag-symbolic");
+        break;
+    default:
+        name = "No HEAD commit";
+        icon = QIcon::fromTheme("vcs-conflicting");
         break;
     }
 

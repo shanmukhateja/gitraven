@@ -6,7 +6,7 @@
 
 namespace fs = std::filesystem;
 
-GitManager::GitManager(QObject *parent, QString dir) : GitManagerBase(parent), m_repoPath(std::move(dir)) {
+GitManager::GitManager(QObject *parent, QString dir) : GitManagerBase(parent, std::move(dir)) {
     Q_ASSERT(!m_repoPath.isEmpty());
 
     // Init Git library
