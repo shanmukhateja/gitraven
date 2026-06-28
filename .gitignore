@@ -12,6 +12,8 @@ resources/editor/node_modules
 .idea/QtSettings.xml
 .idea/vcs.xml
 .idea/shelf
+.idea/modules.xml
+.idea/*.iml
 
 # Keep inspection profiles for team consistency
 !.idea/inspectionProfiles/
